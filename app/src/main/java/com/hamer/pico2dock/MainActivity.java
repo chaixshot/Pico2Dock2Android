@@ -1,10 +1,8 @@
 package com.hamer.pico2dock;
 
-import android.app.Activity;
+import android.content.res.Resources;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -22,6 +20,7 @@ import com.developer.filepicker.controller.DialogSelectionListener;
 import com.developer.filepicker.model.DialogConfigs;
 import com.developer.filepicker.model.DialogProperties;
 import com.developer.filepicker.view.FilePickerDialog;
+import com.mcal.apksigner.ApkSigner;
 import com.reandroid.apkeditor.compile.BuildOptions;
 import com.reandroid.apkeditor.decompile.DecompileOptions;
 
@@ -30,6 +29,9 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -39,8 +41,11 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
+import io.noties.markwon.Markwon;
+
 public class MainActivity extends AppCompatActivity {
     String[] APKFiles;
+    File keystore;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,6 +57,24 @@ public class MainActivity extends AppCompatActivity {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
+
+        Resources resources = this.getResources();
+
+        try {
+            // Open the audio file from the raw folder
+            InputStream inputStream = resources.openRawResource(R.raw.keystore);
+            byte[] bytes = new byte[inputStream.available()];
+            inputStream.read(bytes);
+            inputStream.close();
+
+            // Create a new File Object
+            keystore = new File(this.getExternalFilesDir(null), "keystore.jks");
+            FileOutputStream outputStream = new FileOutputStream(keystore);
+            outputStream.write(bytes);
+            outputStream.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public void SelectFile(View view) {
@@ -108,37 +131,44 @@ public class MainActivity extends AppCompatActivity {
                 Boolean isReadable = apkFile.canRead();
 
                 if (isExist && isFile && isReadable) {
-                    File dirWorker = new File("storage/emulated/0/Pico2Dock");
+                    File dirPico2Dock = new File("storage/emulated/0/Pico2Dock");
+                    File dirWorker = new File(dirPico2Dock + "/Worker");
+                    File dirUnsign = new File(dirPico2Dock + "/Unsign");
                     File dirApkOut = new File(filePath + "/Pico_" + apkName);
+                    File dirApkUnsing = new File(dirUnsign + "/" + apkName);
 
                     // Check if output apk file exist
                     if (dirApkOut.exists()) {
                         int count = 1;
                         while (dirApkOut.exists()) {
-                            String newPath = String.format(filePath + "/PICO_%s(%d).apk", apkName.substring(0, apkName.length() - 4), count);
+                            String newPath = String.format(filePath + "/PICO_%s (%d).apk", apkName.substring(0, apkName.length() - 4), count);
                             dirApkOut = new File(newPath);
                             count++;
                         }
                         ;
                     }
 
+                    //?? -------------------- [[ Start decompiler apk ]] --------------------
                     try {
-                        //?? -------------------- [[ Start decompiler apk ]] --------------------
                         ChangeStateText("### Current Status\nDecompiling **" + apkName + "**...\"");
 
                         DecompileOptions decompiler = new DecompileOptions();
                         decompiler.inputFile = apkFile;
                         decompiler.outputFile = dirWorker;
-
                         decompiler.runCommand();
+                    } catch (Exception e) {
+                        ChangeStateText(e.toString());
+                        continue;
+                    }
 
-                        //?? -------------------- [[ Edit AndroidManifest.xml ]] --------------------
+                    //?? -------------------- [[ Edit AndroidManifest.xml ]] --------------------
+                    try {
                         ChangeStateText("### Current Status\nModifing **AndroidManifest.xml** of **" + apkName + "**...");
 
                         boolean isHideDock = false; // Set this accordingly
                         String androidSpace = "http://schemas.android.com/apk/res/android";
 
-                        File xmlFile = new File("storage/emulated/0/Pico2Dock/AndroidManifest.xml");
+                        File xmlFile = new File(dirWorker + "/AndroidManifest.xml");
                         DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
                         dbFactory.setNamespaceAware(true);
                         DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
@@ -198,23 +228,42 @@ public class MainActivity extends AppCompatActivity {
                         DOMSource source = new DOMSource(doc);
                         StreamResult result = new StreamResult(xmlFile);
                         transformer.transform(source, result);
+                    } catch (Exception e) {
+                        ChangeStateText(e.toString());
+                        continue;
+                    }
 
-
-                        //?? -------------------- [[ Start compiler apk ]] --------------------
+                    //?? -------------------- [[ Start compiler apk ]] --------------------
+                    try {
                         ChangeStateText("### Current Status\nCompiling **" + apkName + "**...");
 
                         BuildOptions compiler = new BuildOptions();
 
                         compiler.inputFile = dirWorker;
-                        compiler.outputFile = dirApkOut;
+                        compiler.outputFile = dirApkUnsing;
                         compiler.type = BuildOptions.TYPE_XML;
-
                         compiler.runCommand();
+                    } catch (Exception e) {
+                        ChangeStateText(e.toString());
+                        continue;
+                    }
+
+                    //?? -------------------- [[ Start signing apk ]] --------------------
+                    try {
+                        final ApkSigner signer = new ApkSigner(dirApkUnsing, dirApkOut);
+                        signer.setUseDefaultSignatureVersion(false);
+                        signer.setV1SigningEnabled(true);
+                        signer.setV2SigningEnabled(true);
+                        signer.setV3SigningEnabled(true);
+                        signer.setV4SigningEnabled(false);
+                        signer.signRelease(keystore, "forpico2dock", "H@mer", "forpico2dock");
 
                     } catch (Exception e) {
                         ChangeStateText(e.toString());
                         continue;
                     }
+
+                    dirPico2Dock.delete();
                 } else {
                     ChangeStateText("Can't access file \"" + file + "\"");
                 }
@@ -235,18 +284,18 @@ public class MainActivity extends AppCompatActivity {
             Button startButton = (Button) findViewById(R.id.StartButton);
             startButton.setEnabled(true);
 
-            ChangeStateText("### Current Status\nAll APK files have been modified.\nYou can install them using the APK files in the same folder as the original file.");
+//            ChangeStateText("### Current Status\nAll APK files have been modified.\nYou can install them using the APK files in the same folder as the original file.");
         }
     }
 
     private void ChangeStateText(String text) {
         TextView statusText = (TextView) findViewById(R.id.StatusText);
+        final Markwon markwon = Markwon.create(this);
 
-        // Edit UI element from another thread
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                statusText.setText(text);
+                markwon.setMarkdown(statusText, text);
             }
         });
     }

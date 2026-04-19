@@ -48,4 +48,6 @@ dependencies {
 
 //    implementation("com.github.REAndroid:APKEditor:V1.4.6")
     implementation("com.github.TutorialsAndroid:FilePicker:v9.0.1")
+    implementation("io.noties.markwon:core:4.6.2")
+    implementation("com.github.timscriptov:apksigner:1.2.0")
 }
