@@ -1,5 +1,7 @@
 package com.hamer.pico2dock;
 
+import android.Manifest;
+import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -12,6 +14,8 @@ import android.widget.TextView;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -58,8 +62,10 @@ public class MainActivity extends AppCompatActivity {
             return insets;
         });
 
-        Resources resources = this.getResources();
+        CheckPermission();
 
+        // Prepare keystore.jks
+        Resources resources = this.getResources();
         try {
             // Open the audio file from the raw folder
             InputStream inputStream = resources.openRawResource(R.raw.keystore);
@@ -156,7 +162,6 @@ public class MainActivity extends AppCompatActivity {
                         decompiler.inputFile = apkFile;
                         decompiler.outputFile = dirWorker;
                         decompiler.loadDex = 1;
-                        decompiler.commentLevel = "off";
                         decompiler.runCommand();
                     } catch (Exception e) {
                         ChangeStateText(e.toString());
@@ -300,5 +305,34 @@ public class MainActivity extends AppCompatActivity {
                 markwon.setMarkdown(statusText, text);
             }
         });
+    }
+
+    //** Permission
+    private void CheckPermission() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 0);
+        } else {
+            permissionsGranted();
+        }
+    }
+
+    private void permissionsGranted() {
+
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        switch (requestCode) {
+            case 0: {
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    permissionsGranted();
+                } else {
+
+                }
+                return;
+            }
+        }
     }
 }
