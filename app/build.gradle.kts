@@ -40,8 +40,12 @@ dependencies {
     implementation(libs.material)
     implementation(libs.activity)
     implementation(libs.constraintlayout)
-    implementation(files("C:\\Users\\chai5\\Downloads\\Compressed\\apktool_3.0.1.jar"))
+    implementation(libs.cardview)
+    implementation(files("C:\\Users\\chai5\\Downloads\\Compressed\\APKEditor-1.4.8.jar"))
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
+
+//    implementation("com.github.REAndroid:APKEditor:V1.4.6")
+    implementation("com.github.TutorialsAndroid:FilePicker:v9.0.1")
 }
