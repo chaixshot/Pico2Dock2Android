@@ -62,25 +62,8 @@ public class MainActivity extends AppCompatActivity {
             return insets;
         });
 
-        CheckPermission();
-
-        // Prepare keystore.jks
-        Resources resources = this.getResources();
-        try {
-            // Open the audio file from the raw folder
-            InputStream inputStream = resources.openRawResource(R.raw.keystore);
-            byte[] bytes = new byte[inputStream.available()];
-            inputStream.read(bytes);
-            inputStream.close();
-
-            // Create a new File Object
-            keystore = new File(this.getExternalFilesDir(null), "keystore.jks");
-            FileOutputStream outputStream = new FileOutputStream(keystore);
-            outputStream.write(bytes);
-            outputStream.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        PermissionHelper.CheckPermission(this);
+        keystore = Utils.GetKeystoreFile(this);
     }
 
     public void SelectFile(View view) {
@@ -307,27 +290,13 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    //** Permission
-    private void CheckPermission() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 0);
-        } else {
-            permissionsGranted();
-        }
-    }
-
-    private void permissionsGranted() {
-
-    }
-
     @Override
     public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         switch (requestCode) {
             case 0: {
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    permissionsGranted();
+                    PermissionHelper.PermissionsGranted();
                 } else {
 
                 }
