@@ -15,6 +15,8 @@ public class PermissionHelper {
         WarningCard = (CardView) context.findViewById(R.id.CardPermissionWarning);
 
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            WarningCard.setVisibility(CardView.VISIBLE);
+
             ActivityCompat.requestPermissions(context,
                     new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 0);
         } else {
