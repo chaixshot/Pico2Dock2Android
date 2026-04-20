@@ -299,6 +299,8 @@ public class MainActivity extends AppCompatActivity {
                         };
                         ApkSignerTool.main(arg);
 
+                        File idsig = new File(dirApkOut + ".idsig");
+                        idsig.delete();
                     } catch (Exception e) {
                         ChangeStateText(e.toString());
                         isError = true;
