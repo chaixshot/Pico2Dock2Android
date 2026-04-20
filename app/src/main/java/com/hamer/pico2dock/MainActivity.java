@@ -5,7 +5,6 @@ import static android.view.View.VISIBLE;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
-import android.opengl.Visibility;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.View;
@@ -49,6 +48,12 @@ public class MainActivity extends AppCompatActivity {
     String[] APKFiles;
     File keystore;
 
+    Button ButtonStart;
+    Button ButtonCancel;
+    Button ButtonClear;
+    ListView ListViewFile;
+    TextView TextViewSelectHint;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -62,6 +67,12 @@ public class MainActivity extends AppCompatActivity {
 
         PermissionHelper.CheckPermission(this);
         keystore = Utils.GetKeystoreFile(this);
+
+        ButtonStart = (Button) findViewById(R.id.ButtonStart);
+        ButtonCancel = (Button) findViewById(R.id.ButtonCancel);
+        ButtonClear = (Button) findViewById(R.id.ButtonClear);
+        ListViewFile = (ListView) findViewById(R.id.ListViewFiles);
+        TextViewSelectHint = (TextView) findViewById(R.id.TextFileSelectHint);
     }
 
     public void SelectFile(View view) {
@@ -85,14 +96,10 @@ public class MainActivity extends AppCompatActivity {
                 if (files.length > 0) {
                     // File list view
                     ListAdapter myAdapter = new ArrayAdapter<String>(_this, android.R.layout.simple_list_item_1, files);
-                    ListView fileList = (ListView) findViewById(R.id.ListViewFiles);
-                    fileList.setAdapter(myAdapter);
+                    ListViewFile.setAdapter(myAdapter);
+                    TextViewSelectHint.setVisibility(View.GONE);
 
                     APKFiles = files;
-
-                    TextView hintText = (TextView)findViewById(R.id.TextFileSelectHint);
-
-                    hintText.setVisibility(View.GONE);
                 }
             }
         });
@@ -102,8 +109,9 @@ public class MainActivity extends AppCompatActivity {
 
     public void StartMainTask(View view) {
         if (APKFiles != null && APKFiles.length > 0) {
-            Button startButton = (Button) findViewById(R.id.StartButton);
-            startButton.setEnabled(false);
+            ButtonStart.setEnabled(false);
+            ButtonCancel.setEnabled(true);
+            ButtonClear.setEnabled(false);
 
             new MainTask().execute(APKFiles);
         } else {
@@ -111,18 +119,15 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    public void ClearFileList(View view){
+    public void ClearFileList(View view) {
         String[] files = new String[]{};
         // File list view
         ListAdapter myAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, files);
-        ListView fileList = (ListView) findViewById(R.id.ListViewFiles);
-        fileList.setAdapter(myAdapter);
+
+        ListViewFile.setAdapter(myAdapter);
+        TextViewSelectHint.setVisibility(VISIBLE);
 
         APKFiles = files;
-
-        TextView hintText = (TextView)findViewById(R.id.TextFileSelectHint);
-
-        hintText.setVisibility(VISIBLE);
     }
 
     private class MainTask extends AsyncTask<String, String, String> {
@@ -301,8 +306,9 @@ public class MainActivity extends AppCompatActivity {
         }
 
         protected void onPostExecute(String result) {
-            Button startButton = (Button) findViewById(R.id.StartButton);
-            startButton.setEnabled(true);
+            ButtonStart.setEnabled(true);
+            ButtonCancel.setEnabled(false);
+            ButtonClear.setEnabled(true);
 
             if (!isError)
                 ChangeStateText("### Current Status\nAll APK files have been modified.\nYou can install them using the APK files in Pico folder by the same folder as the original file.");
