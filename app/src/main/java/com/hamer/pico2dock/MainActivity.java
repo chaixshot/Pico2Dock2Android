@@ -48,6 +48,8 @@ public class MainActivity extends AppCompatActivity {
     String[] APKFiles;
     File keystore;
 
+    AsyncTask MainTask;
+
     Button ButtonStart;
     Button ButtonCancel;
     Button ButtonClear;
@@ -113,7 +115,7 @@ public class MainActivity extends AppCompatActivity {
             ButtonCancel.setEnabled(true);
             ButtonClear.setEnabled(false);
 
-            new MainTask().execute(APKFiles);
+            MainTask = new Worker().execute(APKFiles);
         } else {
             ChangeStateText("### ERROR\nThere is no file in process.");
         }
@@ -130,7 +132,15 @@ public class MainActivity extends AppCompatActivity {
         APKFiles = files;
     }
 
-    private class MainTask extends AsyncTask<String, String, String> {
+    public void CancelMainTask(View view) {
+        ChangeStateText("### Current Status\nCanceling process please wait...");
+
+        MainTask.cancel(true);
+
+        view.setEnabled(false);
+    }
+
+    private class Worker extends AsyncTask<String, String, String> {
         boolean isError = false;
 
         protected String doInBackground(String... APKFiles) {
@@ -169,6 +179,7 @@ public class MainActivity extends AppCompatActivity {
                     }
 
                     //?? -------------------- [[ Start decompiler apk ]] --------------------
+                    if (isCancelled()) break;
                     try {
                         ChangeStateText("### Current Status\nDecompiling **" + apkName + "**...");
 
@@ -183,6 +194,7 @@ public class MainActivity extends AppCompatActivity {
                     }
 
                     //?? -------------------- [[ Edit AndroidManifest.xml ]] --------------------
+                    if (isCancelled()) break;
                     try {
                         ChangeStateText("### Current Status\nModifing **AndroidManifest.xml** of **" + apkName + "**...");
 
@@ -256,6 +268,7 @@ public class MainActivity extends AppCompatActivity {
                     }
 
                     //?? -------------------- [[ Start compiler apk ]] --------------------
+                    if (isCancelled()) break;
                     try {
                         ChangeStateText("### Current Status\nCompiling **" + apkName + "**...");
 
@@ -272,6 +285,7 @@ public class MainActivity extends AppCompatActivity {
                     }
 
                     //?? -------------------- [[ Start signing apk ]] --------------------
+                    if (isCancelled()) break;
                     try {
                         ChangeStateText("### Current Status\nSigning **" + apkName + "**...");
 
@@ -294,8 +308,6 @@ public class MainActivity extends AppCompatActivity {
                 } else {
                     ChangeStateText("Can't access file \"" + file + "\"");
                 }
-
-                if (isCancelled()) break;
             }
 
             return null;
@@ -312,6 +324,17 @@ public class MainActivity extends AppCompatActivity {
 
             if (!isError)
                 ChangeStateText("### Current Status\nAll APK files have been modified.\nYou can install them using the APK files in Pico folder by the same folder as the original file.");
+        }
+
+        protected void onCancelled() {
+            ButtonStart.setEnabled(true);
+            ButtonCancel.setEnabled(false);
+            ButtonClear.setEnabled(true);
+
+            ChangeStateText("### Current Status\nCleaning...");
+            Utils.CleanupTempDir();
+
+            ChangeStateText("### Process has been terminated.");
         }
     }
 

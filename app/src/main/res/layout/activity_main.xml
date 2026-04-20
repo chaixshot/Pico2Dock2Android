@@ -194,7 +194,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginLeft="5dp"
                     android:enabled="false"
-                    android:onClick="StartMainTask"
+                    android:onClick="CancelMainTask"
                     android:text="Cancle" />
 
                 <Button
