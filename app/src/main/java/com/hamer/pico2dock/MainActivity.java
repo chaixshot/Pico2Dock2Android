@@ -12,6 +12,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListAdapter;
 import android.widget.ListView;
+import android.widget.Switch;
 import android.widget.TextView;
 
 import androidx.activity.EdgeToEdge;
@@ -55,6 +56,9 @@ public class MainActivity extends AppCompatActivity {
     Button ButtonClear;
     ListView ListViewFile;
     TextView TextViewSelectHint;
+    Switch SwtichHideDock;
+
+    boolean IsHideDock = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -75,6 +79,9 @@ public class MainActivity extends AppCompatActivity {
         ButtonClear = (Button) findViewById(R.id.ButtonClear);
         ListViewFile = (ListView) findViewById(R.id.ListViewFiles);
         TextViewSelectHint = (TextView) findViewById(R.id.TextFileSelectHint);
+        SwtichHideDock = (Switch) findViewById(R.id.SwitchHideDock);
+
+        IsHideDock = SwtichHideDock.isChecked();
     }
 
     public void SelectFile(View view) {
@@ -198,7 +205,6 @@ public class MainActivity extends AppCompatActivity {
                     try {
                         ChangeStateText("### Current Status\nModifing **AndroidManifest.xml** of **" + apkName + "**...");
 
-                        boolean isHideDock = false; // Set this accordingly
                         String androidSpace = "http://schemas.android.com/apk/res/android";
 
                         File xmlFile = new File(dirWorker + "/AndroidManifest.xml");
@@ -214,7 +220,7 @@ public class MainActivity extends AppCompatActivity {
                         if (true) {
                             Element metaData = doc.createElement("meta-data");
                             metaData.setAttributeNS(androidSpace, "android:name", "pico.vr.position");
-                            metaData.setAttributeNS(androidSpace, "android:value", isHideDock ? "near_dialog" : "near");
+                            metaData.setAttributeNS(androidSpace, "android:value", IsHideDock ? "near_dialog" : "near");
 
                             NodeList applications = xmlRoot.getElementsByTagName("application");
                             for (int i = 0; i < applications.getLength(); i++) {
