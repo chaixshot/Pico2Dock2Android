@@ -299,6 +299,17 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    public void OpenGithubPage(View view) {
+        Uri uri = Uri.parse("https://github.com/chaixshot/Pico2DockAndroid");
+        Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+        startActivity(intent);
+    }
+
+    public void ClickRequestPermission(View view) {
+        PermissionHelper.CheckPermission(this);
+    }
+
+
     @Override
     public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
