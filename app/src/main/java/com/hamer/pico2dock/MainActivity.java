@@ -289,35 +289,14 @@ public class MainActivity extends AppCompatActivity {
                     try {
                         ChangeStateText("### Current Status\nSigning **" + apkName + "**...");
 
-//                        final ApkSigner signer = new ApkSigner(dirApkUnsing, dirApkOut);
-//                        signer.setUseDefaultSignatureVersion(false);
-//                        signer.setV1SigningEnabled(true);
-//                        signer.setV2SigningEnabled(true);
-//                        signer.setV3SigningEnabled(true);
-//                        signer.setV4SigningEnabled(false);
-//                        signer.signRelease(keystore, "forpico2dock", "H@mer", "forpico2dock");
-
-//                        Arg parsedArg = CLIParser.parse(asArgArray("--help"));
-//                        Commandline.translateCommandline(cmd);
                         String[] arg = new String[]{
                                 "sign",
-
-                                "--ks",
-                                keystore.getPath(),
-
-                                "--key-pass",
-                                "pass:forpico2dock",
-
-                                "--ks-pass",
-                                "pass:forpico2dock",
-
-                                "--out",
-                                dirApkOut.getPath(),
-
-                                "--in",
-                                dirApkUnsing.getPath(),
+                                "--ks", keystore.getPath(),
+                                "--key-pass", "pass:forpico2dock",
+                                "--ks-pass", "pass:forpico2dock",
+                                "--in", dirApkUnsing.getPath(),
+                                "--out", dirApkOut.getPath(),
                         };
-//                        arg.
                         ApkSignerTool.main(arg);
 
                     } catch (Exception e) {
