@@ -142,7 +142,8 @@
                                 android:layout_height="wrap_content"
                                 android:layout_marginLeft="10dp"
                                 android:onClick="OpenGithubPage"
-                                android:text="Github Page" />
+                                android:text="Github Page"
+                                android:tooltipText="Open Github page in browser" />
                         </LinearLayout>
                     </LinearLayout>
 
@@ -187,7 +188,8 @@
                     android:layout_height="wrap_content"
                     android:enabled="true"
                     android:onClick="StartMainTask"
-                    android:text="Start" />
+                    android:text="Start"
+                    android:tooltipText="Start convert process" />
 
                 <Button
                     android:id="@+id/ButtonCancel"
@@ -196,7 +198,8 @@
                     android:layout_marginLeft="5dp"
                     android:enabled="false"
                     android:onClick="CancelMainTask"
-                    android:text="Cancle" />
+                    android:text="Cancle"
+                    android:tooltipText="Terminate processing task" />
 
                 <Button
                     android:id="@+id/ButtonClear"
@@ -204,28 +207,102 @@
                     android:layout_height="wrap_content"
                     android:layout_marginLeft="5dp"
                     android:onClick="ClearFileList"
-                    android:text="Clear" />
+                    android:text="Clear"
+                    android:tooltipText="Clear all files" />
 
                 <LinearLayout
                     android:layout_width="fill_parent"
-                    android:layout_height="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="3dp"
                     android:gravity="end"
-                    android:orientation="vertical">
+                    android:orientation="horizontal">
 
                     <androidx.cardview.widget.CardView
                         android:layout_width="wrap_content"
-                        android:layout_height="match_parent"
-                        android:layout_marginTop="3dp"
+                        android:layout_height="wrap_content"
                         app:cardCornerRadius="32dp"
-                        app:contentPadding="10dp">
+                        app:contentPadding="15dp"
+                        app:contentPaddingLeft="20dp"
+                        app:contentPaddingRight="20dp">
 
                         <Switch
                             android:id="@+id/SwitchHideDock"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_weight="0"
-                            android:text="Hide Dock" />
+                            android:text="Hide Dock"
+                            android:tooltipText="Put the app on to of everything incluing dock and keyboard" />
                     </androidx.cardview.widget.CardView>
+
+                    <androidx.cardview.widget.CardView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="5dp"
+                        app:cardCornerRadius="32dp"
+                        app:contentPaddingBottom="5dp"
+                        app:contentPaddingLeft="20dp"
+                        app:contentPaddingRight="20dp"
+                        app:contentPaddingTop="5dp">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:orientation="horizontal">
+
+                            <CheckBox
+                                android:id="@+id/checkBox"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="New package name"
+                                android:tooltipText="Attempting to auto-rename the package allows to install app alongside the normal version.\n\nPackage is more likey not to work, depending the app is writtcn and its protection." />
+
+                            <CheckBox
+                                android:id="@+id/checkBox2"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginLeft="5dp"
+                                android:text="Advance mode"
+                                android:tooltipText="Rename the package name in advanced mode if normal is not working." />
+                        </LinearLayout>
+
+                    </androidx.cardview.widget.CardView>
+
+                    <androidx.cardview.widget.CardView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="5dp"
+                        app:cardCornerRadius="32dp"
+                        app:contentPaddingBottom="5dp"
+                        app:contentPaddingLeft="20dp"
+                        app:contentPaddingRight="20dp"
+                        app:contentPaddingTop="5dp">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:orientation="horizontal">
+
+                            <EditText
+                                android:id="@+id/editTextText"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:ems="10"
+                                android:hint="After app name"
+                                android:inputType="text"
+                                android:tooltipText="Add text to the end of the original app name. \n\nLeave it black to do nothing. \n\nNot working for an app that can change its name through its settings." />
+
+                            <CheckBox
+                                android:id="@+id/checkBox2"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginLeft="5dp"
+                                android:text="CheckBox"
+                                android:tooltipText="Change the entire app name instead of adding text after." />
+                        </LinearLayout>
+
+                    </androidx.cardview.widget.CardView>
+
                 </LinearLayout>
 
             </LinearLayout>
