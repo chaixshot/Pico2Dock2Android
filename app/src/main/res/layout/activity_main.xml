@@ -189,28 +189,29 @@
                             android:tooltipText="Start convert process" />
 
                         <Button
-                            android:id="@+id/ButtonCancel"
+                            android:id="@+id/ButtonClear"
                             android:layout_width="wrap_content"
                             android:layout_height="40dp"
                             android:layout_marginLeft="5dp"
                             android:enabled="false"
-                            android:onClick="CancelMainTask"
+                            android:onClick="ClearFileList"
                             android:paddingTop="0dp"
                             android:paddingBottom="0dp"
-                            android:text="Cancle"
-                            android:tooltipText="Terminate processing task" />
+                            android:text="Clear"
+                            android:tooltipText="Clear all files" />
+
                     </LinearLayout>
 
                     <Button
-                        android:id="@+id/ButtonClear"
+                        android:id="@+id/ButtonCancel"
                         android:layout_width="wrap_content"
                         android:layout_height="40dp"
                         android:enabled="false"
-                        android:onClick="ClearFileList"
+                        android:onClick="CancelMainTask"
                         android:paddingTop="0dp"
                         android:paddingBottom="0dp"
-                        android:text="Clear"
-                        android:tooltipText="Clear all files" />
+                        android:text="Cancle"
+                        android:tooltipText="Terminate processing task" />
 
                 </LinearLayout>
 
@@ -331,9 +332,9 @@
                     <FrameLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginLeft="10dp"
+                        android:layout_marginLeft="6dp"
                         android:layout_marginTop="-4dp"
-                        android:layout_marginRight="10dp">
+                        android:layout_marginRight="6dp">
 
                         <ProgressBar
                             android:id="@+id/StatusProgressBar"
@@ -342,15 +343,16 @@
                             android:layout_height="match_parent"
                             android:layout_gravity="center"
                             android:progress="40"
-                            android:scaleY="2" />
+                            android:scaleY="4" />
 
                         <TextView
                             android:id="@+id/PercentText"
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"
                             android:gravity="center"
+                            android:paddingTop="1dp"
                             android:text="40%"
-                            android:textSize="8sp"
+                            android:textSize="12sp"
                             android:textStyle="bold" />
                     </FrameLayout>
 
