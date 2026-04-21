@@ -120,7 +120,6 @@ public class MainActivity extends AppCompatActivity {
         FilePickerDialog dialog = new FilePickerDialog(MainActivity.this, properties);
         dialog.setTitle("Select apk files");
 
-        var _this = this;
         dialog.setDialogSelectionListener(new DialogSelectionListener() {
             @Override
             public void onSelectedFilePaths(String[] files) {
@@ -512,8 +511,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void ChangeButtonState() {
-        if (PermissionHelper.IsPermissionsGranted &&
-                (APKFiles != null && APKFiles.length > 0) &&
+        if ((APKFiles != null && APKFiles.length > 0) &&
                 (!IsProcessRunning))
             ButtonStart.setEnabled(true);
         else
