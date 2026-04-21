@@ -13,6 +13,7 @@ public class PermissionHelper {
     static MainActivity mainActivity = MainActivity.getInstance();
     static CardView WarningCard = (CardView) mainActivity.findViewById(R.id.CardPermissionWarning);
     static Button ButtonStart = (Button) mainActivity.findViewById(R.id.ButtonStart);
+    static Boolean IsPermissionsGranted = false;
 
     public static void CheckPermission() {
         if (ContextCompat.checkSelfPermission(mainActivity, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
@@ -26,7 +27,8 @@ public class PermissionHelper {
     }
 
     public static void PermissionsGranted() {
+        IsPermissionsGranted = true;
+
         WarningCard.setVisibility(CardView.GONE);
-        ButtonStart.setEnabled(true);
     }
 }

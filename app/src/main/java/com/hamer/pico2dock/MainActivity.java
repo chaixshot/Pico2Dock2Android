@@ -80,7 +80,6 @@ public class MainActivity extends AppCompatActivity {
 
         instance = this;
 
-        PermissionHelper.CheckPermission();
         keystore = Utils.GetKeystoreFile();
 
         ButtonStart = (Button) findViewById(R.id.ButtonStart);
@@ -88,9 +87,10 @@ public class MainActivity extends AppCompatActivity {
         ButtonClear = (Button) findViewById(R.id.ButtonClear);
         TextViewSelectHint = (TextView) findViewById(R.id.TextFileSelectHint);
         SwtichHideDock = (Switch) findViewById(R.id.SwitchHideDock);
-
         CheckboxRePackage = (CheckBox) findViewById(R.id.CheckboxRePackage);
         CheckboxRePackageAdv = (CheckBox) findViewById(R.id.CheckboxRePackageAdv);
+        ChangeButtonState();
+        PermissionHelper.CheckPermission();
     }
 
     public static MainActivity getInstance() {
@@ -121,7 +121,7 @@ public class MainActivity extends AppCompatActivity {
                     Utils.FileviewApply(files);
 
                     TextViewSelectHint.setVisibility(View.GONE);
-                    ButtonClear.setEnabled(true);
+                    ChangeButtonState();
                 }
             }
         });
@@ -130,21 +130,16 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void StartMainTask(View view) {
-        if (APKFiles != null && APKFiles.length > 0) {
-            ButtonStart.setEnabled(false);
-            ButtonCancel.setEnabled(true);
-            ButtonClear.setEnabled(false);
+        IsHideDock = SwtichHideDock.isChecked();
+        IsRePackage = CheckboxRePackage.isChecked();
+        IsRePackageAdv = CheckboxRePackageAdv.isChecked();
 
-            IsHideDock = SwtichHideDock.isChecked();
-            IsRePackage = CheckboxRePackage.isChecked();
-            IsRePackageAdv = CheckboxRePackageAdv.isChecked();
+        Utils.FileviewClearTag();
+        ResetAppearance();
 
-            Utils.FileviewClearTag();
+        MainTask = new Worker().execute(APKFiles);
 
-            MainTask = new Worker().execute(APKFiles);
-        } else {
-            ChangeStateText("### ERROR\n---\nThere is no file in process.");
-        }
+        ChangeButtonState();
     }
 
     public void ClearFileList(View view) {
@@ -155,7 +150,7 @@ public class MainActivity extends AppCompatActivity {
         Utils.FileviewApply(empty);
 
         TextViewSelectHint.setVisibility(VISIBLE);
-        ButtonClear.setEnabled(false);
+        ChangeButtonState();
     }
 
     public void CancelMainTask(View view) {
@@ -467,9 +462,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         protected void onPostExecute(String result) {
-            ButtonStart.setEnabled(true);
-            ButtonCancel.setEnabled(false);
-            ButtonClear.setEnabled(true);
+            ChangeButtonState();
 
             if (errorMessage != null && !errorMessage.isEmpty())
                 ChangeStateText("### ERROR\n---\n\n```\n" + errorMessage + "\n```");
@@ -479,15 +472,30 @@ public class MainActivity extends AppCompatActivity {
         }
 
         protected void onCancelled() {
-            ButtonStart.setEnabled(true);
-            ButtonCancel.setEnabled(false);
-            ButtonClear.setEnabled(true);
+            ChangeButtonState();
 
             ChangeStateText("### Current Status\n---\nCleaning directory...");
             Utils.CleanupTempDir();
 
             ChangeStateText("### Current Status\n---\nProcess has been terminated.");
         }
+    }
+
+    private void ChangeButtonState() {
+        if (PermissionHelper.IsPermissionsGranted && (APKFiles != null && APKFiles.length > 0) && (MainTask == null || MainTask.getStatus() != AsyncTask.Status.RUNNING))
+            ButtonStart.setEnabled(true);
+        else
+            ButtonStart.setEnabled(false);
+
+        if (MainTask != null && !MainTask.isCancelled() && MainTask.getStatus() == AsyncTask.Status.RUNNING)
+            ButtonCancel.setEnabled(true);
+        else
+            ButtonCancel.setEnabled(false);
+
+        if ((APKFiles != null && APKFiles.length > 0) && !ButtonCancel.isEnabled())
+            ButtonClear.setEnabled(true);
+        else
+            ButtonClear.setEnabled(false);
     }
 
     public void ChangeStateText(String text) {
