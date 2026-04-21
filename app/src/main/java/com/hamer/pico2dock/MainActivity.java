@@ -8,11 +8,8 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
-import android.widget.ListAdapter;
-import android.widget.ListView;
 import android.widget.Switch;
 import android.widget.TextView;
 
@@ -60,7 +57,6 @@ public class MainActivity extends AppCompatActivity {
     Button ButtonStart;
     Button ButtonCancel;
     Button ButtonClear;
-    ListView ListViewFile;
     TextView TextViewSelectHint;
     Switch SwtichHideDock;
     CheckBox CheckboxRePackage;
@@ -90,7 +86,6 @@ public class MainActivity extends AppCompatActivity {
         ButtonStart = (Button) findViewById(R.id.ButtonStart);
         ButtonCancel = (Button) findViewById(R.id.ButtonCancel);
         ButtonClear = (Button) findViewById(R.id.ButtonClear);
-        ListViewFile = (ListView) findViewById(R.id.ListViewFiles);
         TextViewSelectHint = (TextView) findViewById(R.id.TextFileSelectHint);
         SwtichHideDock = (Switch) findViewById(R.id.SwitchHideDock);
 
@@ -123,9 +118,7 @@ public class MainActivity extends AppCompatActivity {
                 if (files.length > 0) {
                     APKFiles = files;
 
-                    // File list view
-                    ListAdapter myAdapter = new ArrayAdapter<String>(_this, android.R.layout.simple_list_item_1, files);
-                    ListViewFile.setAdapter(myAdapter);
+                    Utils.FileviewApply(files);
 
                     TextViewSelectHint.setVisibility(View.GONE);
                     ButtonClear.setEnabled(true);
@@ -146,9 +139,11 @@ public class MainActivity extends AppCompatActivity {
             IsRePackage = CheckboxRePackage.isChecked();
             IsRePackageAdv = CheckboxRePackageAdv.isChecked();
 
+            Utils.FileviewClearTag();
+
             MainTask = new Worker().execute(APKFiles);
         } else {
-            ChangeStateText("### ERROR\nThere is no file in process.");
+            ChangeStateText("### ERROR\n---\nThere is no file in process.");
         }
     }
 
@@ -157,9 +152,7 @@ public class MainActivity extends AppCompatActivity {
 
         APKFiles = empty;
 
-        // File list view
-        ListAdapter myAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, empty);
-        ListViewFile.setAdapter(myAdapter);
+        Utils.FileviewApply(empty);
 
         TextViewSelectHint.setVisibility(VISIBLE);
         ButtonClear.setEnabled(false);
@@ -175,12 +168,13 @@ public class MainActivity extends AppCompatActivity {
 
     private class Worker extends AsyncTask<String, String, String> {
         String errorMessage;
+        int index = 0;
 
-        protected String doInBackground(String... APKFiles) {
+        protected String doInBackground(String... apkFiles) {
             ChangeStateText("### Current Status\n---\nCleaning directory...");
             Utils.CleanupTempDir();
 
-            for (String file : APKFiles) {
+            for (String file : apkFiles) {
                 File apkFile = new File(file);
                 String apkName = apkFile.getName();
                 String filePath = apkFile.getAbsolutePath().replace(apkName, "");
@@ -189,246 +183,280 @@ public class MainActivity extends AppCompatActivity {
                 Boolean isFile = apkFile.isFile();
                 Boolean isReadable = apkFile.canRead();
 
-                if (isExist && isFile && isReadable) {
-                    File dirPico2Dock = new File("storage/emulated/0/Pico2Dock");
-                    File dirWorker = new File(dirPico2Dock + "/Worker");
-                    File dirUnsign = new File(dirPico2Dock + "/Unsign");
-                    File dirOut = new File(filePath + "/Pico");
-                    File dirApkOut = new File(dirOut + "/Pico_" + apkName);
-                    File dirApkUnsing = new File(dirUnsign + "/" + apkName);
+                errorMessage = "";
 
-                    if (!dirOut.exists())
-                        dirOut.mkdir();
+                // skip is file error from previous task
+                if (file.contains("✖️"))
+                    continue;
 
-                    // Check if output apk file exist
-                    if (dirApkOut.exists()) {
-                        int count = 1;
-                        while (dirApkOut.exists()) {
-                            String newPath = String.format(dirOut + "/Pico_%s (%d).apk", apkName.substring(0, apkName.length() - 4), count);
-                            dirApkOut = new File(newPath);
-                            count++;
-                        }
-                        ;
-                    }
+                //?? -------------------- [[ File indicator ]] --------------------
+                Utils.FileviewChangeText(index, "🛠️ " + file);
+                Utils.FileviewSelect(index);
 
-                    //?? -------------------- [[ Start decompiler apk ]] --------------------
-                    if (isCancelled()) break;
-                    try {
-                        ChangeStateText("### Current Status\n---\nDecompiling **" + apkName + "**...");
+                File dirPico2Dock = new File("storage/emulated/0/Pico2Dock");
+                File dirWorker = new File(dirPico2Dock + "/Worker");
+                File dirUnsign = new File(dirPico2Dock + "/Unsign");
+                File dirOut = new File(filePath + "/Pico");
+                File dirApkOut = new File(dirOut + "/Pico_" + apkName);
+                File dirApkUnsing = new File(dirUnsign + "/" + apkName);
 
-                        DecompileOptions options = new DecompileOptions();
-                        options.inputFile = apkFile;
-                        options.outputFile = dirWorker;
-                        options.loadDex = 1; // 1.4.2++
+                if (!dirOut.exists())
+                    dirOut.mkdir();
 
-                        Decompiler executor = new Decompiler(options, apkName);
-                        executor.logMessage(this.toString());
-                        executor.runCommand();
-                    } catch (Exception | OutOfMemoryError error) {
-                        errorMessage = error.toString();
+                if (!isExist || !isFile || !isReadable) {
+                    errorMessage = "Can't access file \"" + file + "\"";
+                    Utils.FileviewChangeText(index, "✖️ " + file + " 🔘" + errorMessage);
 
-                        continue;
-                    }
-
-                    //?? -------------------- [[ Edit AndroidManifest.xml ]] --------------------
-                    if (isCancelled()) break;
-                    try {
-                        ChangeStateText("### Current Status\n---\nModifing **AndroidManifest.xml** of **" + apkName + "**...");
-
-                        String androidSpace = "http://schemas.android.com/apk/res/android";
-
-                        File xmlFile = new File(dirWorker + "/AndroidManifest.xml");
-                        DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
-                        dbFactory.setNamespaceAware(true);
-                        DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
-                        Document doc = dBuilder.parse(xmlFile);
-                        doc.getDocumentElement().normalize();
-
-                        Element xmlRoot = doc.getDocumentElement();
-
-                        // Add docked attribute
-                        if (true) {
-                            Element metaData = doc.createElement("meta-data");
-                            metaData.setAttributeNS(androidSpace, "android:name", "pico.vr.position");
-                            metaData.setAttributeNS(androidSpace, "android:value", IsHideDock ? "near_dialog" : "near");
-
-                            NodeList applications = xmlRoot.getElementsByTagName("application");
-                            for (int i = 0; i < applications.getLength(); i++) {
-                                Element application = (Element) applications.item(i);
-
-                                NodeList activities = application.getElementsByTagName("activity");
-                                for (int j = 0; j < activities.getLength(); j++) {
-                                    Element activity = (Element) activities.item(j);
-                                    activity.appendChild(metaData.cloneNode(true));
-                                }
-
-                                NodeList aliases = application.getElementsByTagName("activity-alias");
-                                for (int j = 0; j < aliases.getLength(); j++) {
-                                    Element alias = (Element) aliases.item(j);
-                                    alias.appendChild(metaData.cloneNode(true));
-                                }
-                            }
-                        }
-
-                        // Pico tag
-                        if (true) {
-                            Element application = (Element) xmlRoot.getElementsByTagName("application").item(0);
-
-                            Element metaData1 = doc.createElement("meta-data");
-                            metaData1.setAttributeNS(androidSpace, "android:name", "isPUI");
-                            metaData1.setAttributeNS(androidSpace, "android:value", "1");
-                            application.appendChild(metaData1);
-
-                            Element metaData2 = doc.createElement("meta-data");
-                            metaData2.setAttributeNS(androidSpace, "android:name", "pvr.vrshell.mode");
-                            metaData2.setAttributeNS(androidSpace, "android:value", "1");
-                            application.appendChild(metaData2);
-
-                            Element metaData3 = doc.createElement("meta-data");
-                            metaData3.setAttributeNS(androidSpace, "android:name", "pico_permission_dim_show");
-                            metaData3.setAttributeNS(androidSpace, "android:value", "false");
-                            application.appendChild(metaData3);
-                        }
-
-                        // Random package name
-                        if (IsRePackage) {
-                            String packageName = xmlRoot.getAttribute("package");
-                            String ranPrefix = Utils.generateString(6);
-                            String newPackageName = packageName + ranPrefix;
-
-                            // Change package name
-                            xmlRoot.setAttribute("package", newPackageName);
-
-                            if (IsRePackageAdv) {
-                                String sharedUserId = xmlRoot.getAttributeNS(androidSpace, "sharedUserId");
-                                if (sharedUserId != null && !sharedUserId.isEmpty()) {
-                                    xmlRoot.setAttributeNS(androidSpace, "sharedUserId", sharedUserId.replace(packageName, newPackageName));
-                                }
-                            }
-
-                            NodeList applicationNodes = xmlRoot.getElementsByTagName("application");
-                            for (int i = 0; i < applicationNodes.getLength(); i++) {
-                                Element application = (Element) applicationNodes.item(i);
-                                NodeList providers = application.getElementsByTagName("provider");
-                                for (int j = 0; j < providers.getLength(); j++) {
-                                    Element provider = (Element) providers.item(j);
-                                    String value = provider.getAttributeNS(androidSpace, "authorities");
-                                    if (value.contains(packageName)) {
-                                        provider.setAttributeNS(androidSpace, "authorities", value.replace(packageName, newPackageName));
-                                    } else {
-                                        provider.setAttributeNS(androidSpace, "authorities", value + ranPrefix);
-                                    }
-                                }
-                            }
-
-                            // Change permission
-                            {
-                                XPathFactory xpathFactory = XPathFactory.newInstance();
-                                XPath xpath = xpathFactory.newXPath();
-                                try {
-                                    XPathExpression permissionExpr = xpath.compile("//permission");
-                                    NodeList permissionsList = (NodeList) permissionExpr.evaluate(xmlRoot, XPathConstants.NODESET);
-                                    for (int i = 0; i < permissionsList.getLength(); i++) {
-                                        Element permission = (Element) permissionsList.item(i);
-                                        String value = permission.getAttributeNS(androidSpace, "name");
-                                        if (IsRePackageAdv) {
-                                            permission.setAttributeNS(androidSpace, "name", value.replace(packageName, newPackageName));
-                                        } else {
-                                            permission.setAttributeNS(androidSpace, "name", value + ranPrefix);
-                                        }
-                                    }
-
-                                    XPathExpression usesPermissionExpr = xpath.compile("//uses-permission");
-                                    NodeList usesPermissionsList = (NodeList) usesPermissionExpr.evaluate(xmlRoot, XPathConstants.NODESET);
-                                    for (int i = 0; i < usesPermissionsList.getLength(); i++) {
-                                        Element permission = (Element) usesPermissionsList.item(i);
-                                        String value = permission.getAttributeNS(androidSpace, "name");
-                                        if (IsRePackageAdv) {
-                                            permission.setAttributeNS(androidSpace, "name", value.replace(packageName, newPackageName));
-                                        } else {
-                                            permission.setAttributeNS(androidSpace, "name", value + ranPrefix);
-                                        }
-                                    }
-
-                                    if (IsRePackageAdv) {
-                                        XPathExpression activityAliasExpr = xpath.compile("//activity-alias");
-                                        NodeList activityAliasList = (NodeList) activityAliasExpr.evaluate(xmlRoot, XPathConstants.NODESET);
-                                        for (int i = 0; i < activityAliasList.getLength(); i++) {
-                                            Element activityAlias = (Element) activityAliasList.item(i);
-                                            String value = activityAlias.getAttributeNS(androidSpace, "name");
-                                            activityAlias.setAttributeNS(androidSpace, "name", value.replace(packageName, newPackageName));
-                                        }
-                                    }
-                                } catch (XPathExpressionException error) {
-                                    errorMessage = error.toString();
-
-                                    continue;
-                                }
-                            }
-                        }
-
-                        // Save changes to file
-                        TransformerFactory transformerFactory = TransformerFactory.newInstance();
-                        Transformer transformer = transformerFactory.newTransformer();
-                        transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-                        DOMSource source = new DOMSource(doc);
-                        StreamResult result = new StreamResult(xmlFile);
-                        transformer.transform(source, result);
-                    } catch (Exception error) {
-                        errorMessage = error.toString();
-
-                        continue;
-                    }
-
-                    //?? -------------------- [[ Start compiler apk ]] --------------------
-                    if (isCancelled()) break;
-                    try {
-                        ChangeStateText("### Current Status\n---\nCompiling **" + apkName + "**...");
-
-                        BuildOptions options = new BuildOptions();
-
-                        options.inputFile = dirWorker;
-                        options.outputFile = dirApkUnsing;
-                        options.type = BuildOptions.TYPE_XML;
-
-                        Compiler executor = new Compiler(options, apkName);
-                        executor.logMessage(this.toString());
-                        executor.runCommand();
-                    } catch (Exception | OutOfMemoryError error) {
-                        errorMessage = error.toString();
-
-                        continue;
-                    }
-
-                    //?? -------------------- [[ Start signing apk ]] --------------------
-                    if (isCancelled()) break;
-                    try {
-                        ChangeStateText("### Current Status\n---\nSigning **" + apkName + "**...");
-
-                        String[] arg = new String[]{
-                                "sign",
-                                "--ks", keystore.getPath(),
-                                "--key-pass", "pass:forpico2dock",
-                                "--ks-pass", "pass:forpico2dock",
-                                "--in", dirApkUnsing.getPath(),
-                                "--out", dirApkOut.getPath(),
-                        };
-                        ApkSignerTool.main(arg);
-
-                        File idsig = new File(dirApkOut + ".idsig");
-                        idsig.delete();
-                    } catch (Exception error) {
-                        errorMessage = error.toString();
-
-                        continue;
-                    }
-
-                    //?? -------------------- [[ Cleaning temp ]] --------------------
-                    ChangeStateText("### Current Status\n---\nCleaning directory...");
-                    Utils.CleanupTempDir();
-                } else {
-                    ChangeStateText("Can't access file \"" + file + "\"");
+                    continue;
                 }
+
+                // Check if output apk file exist
+                if (dirApkOut.exists()) {
+                    int count = 1;
+                    while (dirApkOut.exists()) {
+                        String newPath = String.format(dirOut + "/Pico_%s (%d).apk", apkName.substring(0, apkName.length() - 4), count);
+                        dirApkOut = new File(newPath);
+                        count++;
+                    }
+                    ;
+                }
+
+                //?? -------------------- [[ Start decompiler apk ]] --------------------
+                if (isCancelled()) break;
+                try {
+                    ChangeStateText("### Current Status\n---\nDecompiling **" + apkName + "**...");
+                    DecompileOptions options = new DecompileOptions();
+                    options.inputFile = apkFile;
+                    options.outputFile = dirWorker;
+                    options.loadDex = 1; // 1.4.2++
+
+                    Decompiler executor = new Decompiler(options, apkName);
+                    executor.logMessage(this.toString());
+                    executor.runCommand();
+                } catch (Exception error) {
+                    errorMessage = error.toString();
+                    Utils.FileviewChangeText(index, "✖️ " + file + " 🔘" + errorMessage);
+
+                    continue;
+                } catch (OutOfMemoryError error) {
+                    errorMessage = "Out of memory";
+                    Utils.FileviewChangeText(index, "✖️ " + file + " 🔘" + errorMessage);
+
+                    continue;
+                }
+
+
+                //?? -------------------- [[ Edit AndroidManifest.xml ]] --------------------
+                if (isCancelled()) break;
+                try {
+                    ChangeStateText("### Current Status\n---\nModifing **AndroidManifest.xml** of **" + apkName + "**...");
+
+                    String androidSpace = "http://schemas.android.com/apk/res/android";
+
+                    File xmlFile = new File(dirWorker + "/AndroidManifest.xml");
+                    DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+                    dbFactory.setNamespaceAware(true);
+                    DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+                    Document doc = dBuilder.parse(xmlFile);
+                    doc.getDocumentElement().normalize();
+
+                    Element xmlRoot = doc.getDocumentElement();
+
+                    // Add docked attribute
+                    if (true) {
+                        Element metaData = doc.createElement("meta-data");
+                        metaData.setAttributeNS(androidSpace, "android:name", "pico.vr.position");
+                        metaData.setAttributeNS(androidSpace, "android:value", IsHideDock ? "near_dialog" : "near");
+
+                        NodeList applications = xmlRoot.getElementsByTagName("application");
+                        for (int i = 0; i < applications.getLength(); i++) {
+                            Element application = (Element) applications.item(i);
+
+                            NodeList activities = application.getElementsByTagName("activity");
+                            for (int j = 0; j < activities.getLength(); j++) {
+                                Element activity = (Element) activities.item(j);
+                                activity.appendChild(metaData.cloneNode(true));
+                            }
+
+                            NodeList aliases = application.getElementsByTagName("activity-alias");
+                            for (int j = 0; j < aliases.getLength(); j++) {
+                                Element alias = (Element) aliases.item(j);
+                                alias.appendChild(metaData.cloneNode(true));
+                            }
+                        }
+                    }
+
+                    // Pico tag
+                    if (true) {
+                        Element application = (Element) xmlRoot.getElementsByTagName("application").item(0);
+
+                        Element metaData1 = doc.createElement("meta-data");
+                        metaData1.setAttributeNS(androidSpace, "android:name", "isPUI");
+                        metaData1.setAttributeNS(androidSpace, "android:value", "1");
+                        application.appendChild(metaData1);
+
+                        Element metaData2 = doc.createElement("meta-data");
+                        metaData2.setAttributeNS(androidSpace, "android:name", "pvr.vrshell.mode");
+                        metaData2.setAttributeNS(androidSpace, "android:value", "1");
+                        application.appendChild(metaData2);
+
+                        Element metaData3 = doc.createElement("meta-data");
+                        metaData3.setAttributeNS(androidSpace, "android:name", "pico_permission_dim_show");
+                        metaData3.setAttributeNS(androidSpace, "android:value", "false");
+                        application.appendChild(metaData3);
+                    }
+
+                    // Random package name
+                    if (IsRePackage) {
+                        String packageName = xmlRoot.getAttribute("package");
+                        String ranPrefix = Utils.generateString(6);
+                        String newPackageName = packageName + ranPrefix;
+
+                        // Change package name
+                        xmlRoot.setAttribute("package", newPackageName);
+
+                        if (IsRePackageAdv) {
+                            String sharedUserId = xmlRoot.getAttributeNS(androidSpace, "sharedUserId");
+                            if (sharedUserId != null && !sharedUserId.isEmpty()) {
+                                xmlRoot.setAttributeNS(androidSpace, "sharedUserId", sharedUserId.replace(packageName, newPackageName));
+                            }
+                        }
+
+                        NodeList applicationNodes = xmlRoot.getElementsByTagName("application");
+                        for (int i = 0; i < applicationNodes.getLength(); i++) {
+                            Element application = (Element) applicationNodes.item(i);
+                            NodeList providers = application.getElementsByTagName("provider");
+                            for (int j = 0; j < providers.getLength(); j++) {
+                                Element provider = (Element) providers.item(j);
+                                String value = provider.getAttributeNS(androidSpace, "authorities");
+                                if (value.contains(packageName)) {
+                                    provider.setAttributeNS(androidSpace, "authorities", value.replace(packageName, newPackageName));
+                                } else {
+                                    provider.setAttributeNS(androidSpace, "authorities", value + ranPrefix);
+                                }
+                            }
+                        }
+
+                        // Change permission
+                        {
+                            XPathFactory xpathFactory = XPathFactory.newInstance();
+                            XPath xpath = xpathFactory.newXPath();
+                            try {
+                                XPathExpression permissionExpr = xpath.compile("//permission");
+                                NodeList permissionsList = (NodeList) permissionExpr.evaluate(xmlRoot, XPathConstants.NODESET);
+                                for (int i = 0; i < permissionsList.getLength(); i++) {
+                                    Element permission = (Element) permissionsList.item(i);
+                                    String value = permission.getAttributeNS(androidSpace, "name");
+                                    if (IsRePackageAdv) {
+                                        permission.setAttributeNS(androidSpace, "name", value.replace(packageName, newPackageName));
+                                    } else {
+                                        permission.setAttributeNS(androidSpace, "name", value + ranPrefix);
+                                    }
+                                }
+
+                                XPathExpression usesPermissionExpr = xpath.compile("//uses-permission");
+                                NodeList usesPermissionsList = (NodeList) usesPermissionExpr.evaluate(xmlRoot, XPathConstants.NODESET);
+                                for (int i = 0; i < usesPermissionsList.getLength(); i++) {
+                                    Element permission = (Element) usesPermissionsList.item(i);
+                                    String value = permission.getAttributeNS(androidSpace, "name");
+                                    if (IsRePackageAdv) {
+                                        permission.setAttributeNS(androidSpace, "name", value.replace(packageName, newPackageName));
+                                    } else {
+                                        permission.setAttributeNS(androidSpace, "name", value + ranPrefix);
+                                    }
+                                }
+
+                                if (IsRePackageAdv) {
+                                    XPathExpression activityAliasExpr = xpath.compile("//activity-alias");
+                                    NodeList activityAliasList = (NodeList) activityAliasExpr.evaluate(xmlRoot, XPathConstants.NODESET);
+                                    for (int i = 0; i < activityAliasList.getLength(); i++) {
+                                        Element activityAlias = (Element) activityAliasList.item(i);
+                                        String value = activityAlias.getAttributeNS(androidSpace, "name");
+                                        activityAlias.setAttributeNS(androidSpace, "name", value.replace(packageName, newPackageName));
+                                    }
+                                }
+                            } catch (XPathExpressionException error) {
+                                errorMessage = error.toString();
+                                Utils.FileviewChangeText(index, "✖️ " + file + " 🔘" + errorMessage);
+
+                                continue;
+                            }
+                        }
+                    }
+
+                    // Save changes to file
+                    TransformerFactory transformerFactory = TransformerFactory.newInstance();
+                    Transformer transformer = transformerFactory.newTransformer();
+                    transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+                    DOMSource source = new DOMSource(doc);
+                    StreamResult result = new StreamResult(xmlFile);
+                    transformer.transform(source, result);
+                } catch (Exception error) {
+                    errorMessage = error.toString();
+                    Utils.FileviewChangeText(index, "✖️ " + file + " 🔘" + errorMessage);
+
+                    continue;
+                }
+
+                //?? -------------------- [[ Start compiler apk ]] --------------------
+                if (isCancelled()) break;
+                try {
+                    ChangeStateText("### Current Status\n---\nCompiling **" + apkName + "**...");
+
+                    BuildOptions options = new BuildOptions();
+
+                    options.inputFile = dirWorker;
+                    options.outputFile = dirApkUnsing;
+                    options.type = BuildOptions.TYPE_XML;
+
+                    Compiler executor = new Compiler(options, apkName);
+                    executor.logMessage(this.toString());
+                    executor.runCommand();
+                } catch (Exception error) {
+                    errorMessage = error.toString();
+                    Utils.FileviewChangeText(index, "✖️ " + file + " 🔘" + errorMessage);
+
+                    continue;
+                } catch (OutOfMemoryError error) {
+                    errorMessage = "Out of memory";
+                    Utils.FileviewChangeText(index, "✖️ " + file + " 🔘" + errorMessage);
+
+                    continue;
+                }
+
+                //?? -------------------- [[ Start signing apk ]] --------------------
+                if (isCancelled()) break;
+                try {
+                    ChangeStateText("### Current Status\n---\nSigning **" + apkName + "**...");
+
+                    String[] arg = new String[]{
+                            "sign",
+                            "--ks", keystore.getPath(),
+                            "--key-pass", "pass:forpico2dock",
+                            "--ks-pass", "pass:forpico2dock",
+                            "--in", dirApkUnsing.getPath(),
+                            "--out", dirApkOut.getPath(),
+                    };
+                    ApkSignerTool.main(arg);
+
+                    File idsig = new File(dirApkOut + ".idsig");
+                    idsig.delete();
+                } catch (Exception error) {
+                    errorMessage = error.toString();
+                    Utils.FileviewChangeText(index, "✖️ " + file + " 🔘" + errorMessage);
+
+                    continue;
+                }
+
+
+                //?? -------------------- [[ Cleaning temp ]] --------------------
+                ChangeStateText("### Current Status\n---\nCleaning directory...");
+                Utils.CleanupTempDir();
+
+                Utils.FileviewChangeText(index, "✔️ " + file);
+
+
+                index++;
             }
 
             return null;
@@ -443,8 +471,8 @@ public class MainActivity extends AppCompatActivity {
             ButtonCancel.setEnabled(false);
             ButtonClear.setEnabled(true);
 
-            if (errorMessage.isEmpty())
-                ChangeStateText(errorMessage);
+            if (errorMessage != null && !errorMessage.isEmpty())
+                ChangeStateText("### ERROR\n---\n\n```\n" + errorMessage + "\n```");
             else
                 ChangeStateText("### Current Status\n---\nAll APK files have been modified.\nYou can install them using the APK files in Pico folder by the same folder as the original file.");
 
@@ -458,7 +486,7 @@ public class MainActivity extends AppCompatActivity {
             ChangeStateText("### Current Status\n---\nCleaning directory...");
             Utils.CleanupTempDir();
 
-            ChangeStateText("### Process has been terminated.");
+            ChangeStateText("### Current Status\n---\nProcess has been terminated.");
         }
     }
 
@@ -483,7 +511,6 @@ public class MainActivity extends AppCompatActivity {
     public void ClickRequestPermission(View view) {
         PermissionHelper.CheckPermission();
     }
-
 
     @Override
     public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
