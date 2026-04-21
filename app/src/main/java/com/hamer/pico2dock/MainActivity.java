@@ -241,8 +241,8 @@ public class MainActivity extends AppCompatActivity {
                     executor.logMessage(this.toString());
                     executor.runCommand();
                 } catch (Exception error) {
-                    errorMessage = error.toString();
-                    Utils.FileviewChangeText(index, "✖️ " + file + " 🔘" + errorMessage);
+                    errorMessage = "```\n" + error.toString() + "\n```";
+                    Utils.FileviewChangeText(index, "✖️ " + file + " 🔘" + error.toString());
                     IncressProgressBar(apkFiles.length, 4);
 
                     continue;
@@ -253,7 +253,6 @@ public class MainActivity extends AppCompatActivity {
 
                     continue;
                 }
-
 
                 //?? -------------------- [[ Edit AndroidManifest.xml ]] --------------------
                 if (isCancelled()) break;
@@ -386,8 +385,8 @@ public class MainActivity extends AppCompatActivity {
                                     }
                                 }
                             } catch (XPathExpressionException error) {
-                                errorMessage = error.toString();
-                                Utils.FileviewChangeText(index, "✖️ " + file + " 🔘" + errorMessage);
+                                errorMessage = "```\n" + error.toString() + "\n```";
+                                Utils.FileviewChangeText(index, "✖️ " + file + " 🔘" + error.toString());
 
                                 continue;
                             }
@@ -402,8 +401,8 @@ public class MainActivity extends AppCompatActivity {
                     StreamResult result = new StreamResult(xmlFile);
                     transformer.transform(source, result);
                 } catch (Exception error) {
-                    errorMessage = error.toString();
-                    Utils.FileviewChangeText(index, "✖️ " + file + " 🔘" + errorMessage);
+                    errorMessage = "```\n" + error.toString() + "\n```";
+                    Utils.FileviewChangeText(index, "✖️ " + file + " 🔘" + error.toString());
                     IncressProgressBar(apkFiles.length, 3);
 
                     continue;
@@ -425,8 +424,8 @@ public class MainActivity extends AppCompatActivity {
                     executor.logMessage(this.toString());
                     executor.runCommand();
                 } catch (Exception error) {
-                    errorMessage = error.toString();
-                    Utils.FileviewChangeText(index, "✖️ " + file + " 🔘" + errorMessage);
+                    errorMessage = "```\n" + error.toString() + "\n```";
+                    Utils.FileviewChangeText(index, "✖️ " + file + " 🔘" + error.toString());
                     IncressProgressBar(apkFiles.length, 2);
 
                     continue;
@@ -457,8 +456,8 @@ public class MainActivity extends AppCompatActivity {
                     File idsig = new File(dirApkOut + ".idsig");
                     idsig.delete();
                 } catch (Exception error) {
-                    errorMessage = error.toString();
-                    Utils.FileviewChangeText(index, "✖️ " + file + " 🔘" + errorMessage);
+                    errorMessage = "```\n" + error.toString() + "\n```";
+                    Utils.FileviewChangeText(index, "✖️ " + file + " 🔘" + error.toString());
                     IncressProgressBar(apkFiles.length, 1);
 
                     continue;
@@ -487,7 +486,7 @@ public class MainActivity extends AppCompatActivity {
             if (errorMessage != null && !errorMessage.isEmpty()) {
                 PercentText.setText("Error");
 
-                ChangeStateText("### ERROR\n---\n\n```\n" + errorMessage + "\n```");
+                ChangeStateText("### ERROR\n---\n\n" + errorMessage);
             } else {
                 PercentText.setText("Successful");
 
