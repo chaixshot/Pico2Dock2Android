@@ -100,7 +100,7 @@ public class Utils {
             public void run() {
                 Integer index = 0;
                 for (String path : mainActivity.APKFiles) {
-                    String newPath = path.replace("🛠️ ", "").replace("✔️ ", "");
+                    String newPath = path.replace("🛠️ ", "").replace("✅ ", "");
 
                     mainActivity.APKFiles[index] = newPath;
 
