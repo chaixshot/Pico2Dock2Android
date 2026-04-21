@@ -166,7 +166,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void CancelMainTask(View view) {
-        ChangeStateText("### Current Status\nCanceling process please wait...");
+        ChangeStateText("### Current Status\n---\nCanceling process please wait...");
 
         MainTask.cancel(true);
 
@@ -174,10 +174,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private class Worker extends AsyncTask<String, String, String> {
-        boolean isError = false;
+        String errorMessage;
 
         protected String doInBackground(String... APKFiles) {
-            ChangeStateText("### Current Status\nCleaning directory...");
+            ChangeStateText("### Current Status\n---\nCleaning directory...");
             Utils.CleanupTempDir();
 
             for (String file : APKFiles) {
@@ -214,22 +214,26 @@ public class MainActivity extends AppCompatActivity {
                     //?? -------------------- [[ Start decompiler apk ]] --------------------
                     if (isCancelled()) break;
                     try {
-                        ChangeStateText("### Current Status\nDecompiling **" + apkName + "**...");
+                        ChangeStateText("### Current Status\n---\nDecompiling **" + apkName + "**...");
 
-                        DecompileOptions decompiler = new DecompileOptions();
-                        decompiler.inputFile = apkFile;
-                        decompiler.outputFile = dirWorker;
-//                        decompiler.loadDex = 1; // 1.4.2++
-                        decompiler.runCommand();
-                    } catch (Exception e) {
-                        ChangeStateText(e.toString());
+                        DecompileOptions options = new DecompileOptions();
+                        options.inputFile = apkFile;
+                        options.outputFile = dirWorker;
+                        options.loadDex = 1; // 1.4.2++
+
+                        Decompiler executor = new Decompiler(options, apkName);
+                        executor.logMessage(this.toString());
+                        executor.runCommand();
+                    } catch (Exception | OutOfMemoryError error) {
+                        errorMessage = error.toString();
+
                         continue;
                     }
 
                     //?? -------------------- [[ Edit AndroidManifest.xml ]] --------------------
                     if (isCancelled()) break;
                     try {
-                        ChangeStateText("### Current Status\nModifing **AndroidManifest.xml** of **" + apkName + "**...");
+                        ChangeStateText("### Current Status\n---\nModifing **AndroidManifest.xml** of **" + apkName + "**...");
 
                         String androidSpace = "http://schemas.android.com/apk/res/android";
 
@@ -355,9 +359,9 @@ public class MainActivity extends AppCompatActivity {
                                             activityAlias.setAttributeNS(androidSpace, "name", value.replace(packageName, newPackageName));
                                         }
                                     }
-                                } catch (XPathExpressionException e) {
-                                    ChangeStateText(e.toString());
-                                    isError = true;
+                                } catch (XPathExpressionException error) {
+                                    errorMessage = error.toString();
+
                                     continue;
                                 }
                             }
@@ -370,33 +374,36 @@ public class MainActivity extends AppCompatActivity {
                         DOMSource source = new DOMSource(doc);
                         StreamResult result = new StreamResult(xmlFile);
                         transformer.transform(source, result);
-                    } catch (Exception e) {
-                        ChangeStateText(e.toString());
-                        isError = true;
+                    } catch (Exception error) {
+                        errorMessage = error.toString();
+
                         continue;
                     }
 
                     //?? -------------------- [[ Start compiler apk ]] --------------------
                     if (isCancelled()) break;
                     try {
-                        ChangeStateText("### Current Status\nCompiling **" + apkName + "**...");
+                        ChangeStateText("### Current Status\n---\nCompiling **" + apkName + "**...");
 
-                        BuildOptions compiler = new BuildOptions();
+                        BuildOptions options = new BuildOptions();
 
-                        compiler.inputFile = dirWorker;
-                        compiler.outputFile = dirApkUnsing;
-                        compiler.type = BuildOptions.TYPE_XML;
-                        compiler.runCommand();
-                    } catch (Exception e) {
-                        ChangeStateText(e.toString());
-                        isError = true;
+                        options.inputFile = dirWorker;
+                        options.outputFile = dirApkUnsing;
+                        options.type = BuildOptions.TYPE_XML;
+
+                        Compiler executor = new Compiler(options, apkName);
+                        executor.logMessage(this.toString());
+                        executor.runCommand();
+                    } catch (Exception | OutOfMemoryError error) {
+                        errorMessage = error.toString();
+
                         continue;
                     }
 
                     //?? -------------------- [[ Start signing apk ]] --------------------
                     if (isCancelled()) break;
                     try {
-                        ChangeStateText("### Current Status\nSigning **" + apkName + "**...");
+                        ChangeStateText("### Current Status\n---\nSigning **" + apkName + "**...");
 
                         String[] arg = new String[]{
                                 "sign",
@@ -410,14 +417,14 @@ public class MainActivity extends AppCompatActivity {
 
                         File idsig = new File(dirApkOut + ".idsig");
                         idsig.delete();
-                    } catch (Exception e) {
-                        ChangeStateText(e.toString());
-                        isError = true;
+                    } catch (Exception error) {
+                        errorMessage = error.toString();
+
                         continue;
                     }
 
                     //?? -------------------- [[ Cleaning temp ]] --------------------
-                    ChangeStateText("### Current Status\nCleaning directory...");
+                    ChangeStateText("### Current Status\n---\nCleaning directory...");
                     Utils.CleanupTempDir();
                 } else {
                     ChangeStateText("Can't access file \"" + file + "\"");
@@ -436,8 +443,11 @@ public class MainActivity extends AppCompatActivity {
             ButtonCancel.setEnabled(false);
             ButtonClear.setEnabled(true);
 
-            if (!isError)
-                ChangeStateText("### Current Status\nAll APK files have been modified.\nYou can install them using the APK files in Pico folder by the same folder as the original file.");
+            if (errorMessage.isEmpty())
+                ChangeStateText(errorMessage);
+            else
+                ChangeStateText("### Current Status\n---\nAll APK files have been modified.\nYou can install them using the APK files in Pico folder by the same folder as the original file.");
+
         }
 
         protected void onCancelled() {
@@ -445,14 +455,14 @@ public class MainActivity extends AppCompatActivity {
             ButtonCancel.setEnabled(false);
             ButtonClear.setEnabled(true);
 
-            ChangeStateText("### Current Status\nCleaning directory...");
+            ChangeStateText("### Current Status\n---\nCleaning directory...");
             Utils.CleanupTempDir();
 
             ChangeStateText("### Process has been terminated.");
         }
     }
 
-    private void ChangeStateText(String text) {
+    public void ChangeStateText(String text) {
         TextView statusText = (TextView) findViewById(R.id.StatusText);
         final Markwon markwon = Markwon.create(this);
 
