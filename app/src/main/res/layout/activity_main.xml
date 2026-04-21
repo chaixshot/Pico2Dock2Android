@@ -176,7 +176,7 @@
                     android:gravity="center"
                     android:onClick="SelectFile"
                     android:text="Tab here to select file"
-                    android:textSize="30sp" />
+                    android:textSize="24sp" />
             </androidx.cardview.widget.CardView>
 
             <LinearLayout
@@ -199,7 +199,7 @@
                         <Button
                             android:id="@+id/ButtonStart"
                             android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
+                            android:layout_height="40dp"
                             android:enabled="false"
                             android:onClick="StartMainTask"
                             android:paddingTop="0dp"
@@ -210,7 +210,7 @@
                         <Button
                             android:id="@+id/ButtonCancel"
                             android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
+                            android:layout_height="40dp"
                             android:layout_marginLeft="5dp"
                             android:enabled="false"
                             android:onClick="CancelMainTask"
@@ -223,7 +223,7 @@
                     <Button
                         android:id="@+id/ButtonClear"
                         android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
+                        android:layout_height="40dp"
                         android:enabled="false"
                         android:onClick="ClearFileList"
                         android:paddingTop="0dp"
@@ -242,7 +242,7 @@
 
                     <androidx.cardview.widget.CardView
                         android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
+                        android:layout_height="45dp"
                         app:cardCornerRadius="32dp"
                         app:cardUseCompatPadding="false"
                         app:contentPaddingBottom="10dp"
@@ -276,6 +276,8 @@
                                 android:id="@+id/CheckboxRePackage"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
+                                android:layout_marginTop="-7dp"
+                                android:layout_marginBottom="-7dp"
                                 android:text="New package name"
                                 android:tooltipText="Attempting to auto-rename the package allows to install app alongside the normal version.\n\nPackage is more likey not to work, depending the app is writtcn and its protection." />
 
@@ -283,6 +285,8 @@
                                 android:id="@+id/CheckboxRePackageAdv"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
+                                android:layout_marginTop="-7dp"
+                                android:layout_marginBottom="-7dp"
                                 android:text="Advance mode"
                                 android:tooltipText="Rename the package name in advanced mode if normal is not working." />
                         </LinearLayout>
@@ -306,16 +310,21 @@
                                 android:id="@+id/editTextText"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
+                                android:layout_marginTop="-5dp"
+                                android:layout_marginBottom="-5dp"
                                 android:layout_weight="1"
                                 android:ems="10"
                                 android:hint="After app name"
                                 android:inputType="text"
+                                android:textSize="16sp"
                                 android:tooltipText="Add text to the end of the original app name. \n\nLeave it black to do nothing. \n\nNot working for an app that can change its name through its settings." />
 
                             <CheckBox
                                 android:id="@+id/CheckboxRePackageAdv"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
+                                android:layout_marginTop="-5dp"
+                                android:layout_marginBottom="-5dp"
                                 android:text="Rename"
                                 android:tooltipText="Change the entire app name instead of adding text after." />
                         </LinearLayout>
@@ -331,11 +340,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_marginTop="10dp"
-                app:cardCornerRadius="32dp"
-                app:contentPaddingBottom="10dp"
-                app:contentPaddingLeft="24dp"
-                app:contentPaddingRight="24dp"
-                app:contentPaddingTop="10dp">
+                app:cardCornerRadius="32dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -344,15 +349,19 @@
 
                     <FrameLayout
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content">
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="10dp"
+                        android:layout_marginTop="-4dp"
+                        android:layout_marginRight="10dp">
 
                         <ProgressBar
                             android:id="@+id/StatusProgressBar"
                             style="?android:attr/progressBarStyleHorizontal"
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"
+                            android:layout_gravity="center"
                             android:progress="40"
-                            android:scaleY="3" />
+                            android:scaleY="2" />
 
                         <TextView
                             android:id="@+id/PercentText"
@@ -360,14 +369,16 @@
                             android:layout_height="match_parent"
                             android:gravity="center"
                             android:text="40%"
-                            android:textSize="10sp"
+                            android:textSize="8sp"
                             android:textStyle="bold" />
                     </FrameLayout>
 
                     <TextView
                         android:id="@+id/StatusText"
                         android:layout_width="match_parent"
-                        android:layout_height="match_parent" />
+                        android:layout_height="match_parent"
+                        android:layout_marginLeft="24dp"
+                        android:layout_marginRight="24dp" />
 
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
