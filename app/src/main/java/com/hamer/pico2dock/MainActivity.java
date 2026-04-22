@@ -434,7 +434,7 @@ public class MainActivity extends AppCompatActivity {
                                 }
                             }
 
-                            File resDir = new File(dirWorker+"/resources/package_1/res");
+                            File resDir = new File(dirWorker + "/resources/package_1/res");
                             File[] dirs = resDir.listFiles(File::isDirectory);
                             if (dirs != null) {
                                 for (File dir : dirs) {
@@ -724,5 +724,19 @@ public class MainActivity extends AppCompatActivity {
         }
 
         return super.onContextItemSelected(item);
+    }
+
+    public void asdasd(View view) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+
+        builder.setTitle("Help");
+        builder.setMessage("⬤ Hole point any element to see its tooltip including files in the box.");
+
+        builder.setPositiveButton("Close", (dialog, which) -> {
+            dialog.dismiss();
+        });
+
+        AlertDialog alert = builder.create();
+        alert.show();
     }
 }
