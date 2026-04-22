@@ -21,7 +21,7 @@
 3. Copy APK files to the headset and install or install via ``adb install`` command
 4. Click the file selection box to choose files
 6. Press the **Start** button and wait for the finish
-7. Dock APK files are in **Pico** folder by the same folder as the original file, or long click the file above in the box above to see the options
+7. Docked APK files are in **Pico** folder by the same folder as the original file, or long click the file in the box above to see the options
 
 ## ⁉️ Can an app change state on the fly?
 No, but you can install **Docked** alongside **Floating** by checking the **Random package name** box option, and you can also add text after the app name for classification.
