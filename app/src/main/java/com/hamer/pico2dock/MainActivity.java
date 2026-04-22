@@ -137,7 +137,7 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    public void StartMainTask(View view) {
+    public void ButtonStartPressed(View view) {
         IsHideDock = SwtichHideDock.isChecked();
         IsRePackage = CheckboxRePackage.isChecked();
         IsRePackageAdv = CheckboxRePackageAdv.isChecked();
@@ -150,7 +150,7 @@ public class MainActivity extends AppCompatActivity {
         MainTask = new Worker().execute(APKFiles);
     }
 
-    public void ClearFileList(View view) {
+    public void ButtonClearPressed(View view) {
         String[] empty = new String[]{};
 
         APKFiles = empty;
@@ -161,7 +161,7 @@ public class MainActivity extends AppCompatActivity {
         ChangeButtonState();
     }
 
-    public void CancelMainTask(View view) {
+    public void ButtonCancelPressed(View view) {
         if (!MainTask.isCancelled()) {
             ChangeStateText("### Current Status\n---\nCanceling process please wait...");
 
@@ -510,6 +510,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    //** UI
     private void ChangeButtonState() {
         if ((APKFiles != null && APKFiles.length > 0) &&
                 (!IsProcessRunning))
@@ -546,16 +547,6 @@ public class MainActivity extends AppCompatActivity {
         startActivity(intent);
     }
 
-    @Override
-    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-
-        if (requestCode == 112) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED)
-                PermissionHelper.WritePermissionGranted();
-        }
-    }
-
     private void IncreaseProgressBar(int count, int time) {
         runOnUiThread(new Runnable() {
             @Override
@@ -571,5 +562,16 @@ public class MainActivity extends AppCompatActivity {
         StatusProgressBar.setProgress(0);
         StatusProgressBar.setVisibility(View.INVISIBLE);
         PercentText.setText("");
+    }
+
+    //** Permission
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        if (requestCode == 112) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED)
+                PermissionHelper.WritePermissionGranted();
+        }
     }
 }
