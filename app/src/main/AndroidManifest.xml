@@ -12,7 +12,7 @@
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 
     <application
-        android:allowBackup="true"
+        android:allowBackup="false"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
@@ -28,12 +28,20 @@
             android:name=".MainActivity"
             android:exported="true"
             android:icon="@mipmap/ic_launcher"
-            android:roundIcon="@mipmap/ic_launcher_round">
+            android:launchMode="singleTask"
+            android:roundIcon="@mipmap/ic_launcher_round"
+            android:screenOrientation="landscape">
+            <layout
+                android:defaultWidth="900.0dp"
+                android:defaultHeight="600.0dp" />
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
+            <meta-data
+                android:name="pvr.2dtovr.mode"
+                android:value="6" />
             <meta-data
                 android:name="pico.vr.position"
                 android:value="near" />
@@ -55,6 +63,9 @@
         <meta-data
             android:name="pvr.vrshell.mode"
             android:value="1" />
+        <meta-data
+            android:name="com.pvr.hmd.trackingmode"
+            android:value="3dof" />
     </application>
 
 </manifest>
