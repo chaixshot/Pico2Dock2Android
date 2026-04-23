@@ -46,6 +46,9 @@ import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.stream.Stream;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -143,8 +146,6 @@ public class MainActivity extends AppCompatActivity {
                         APKFilesOut = files.clone();
 
                         FileviewHelper.FileviewApply(files);
-
-                        TextViewSelectHint.setVisibility(View.GONE);
                         ChangeButtonState();
                     }
                 }
@@ -177,7 +178,6 @@ public class MainActivity extends AppCompatActivity {
 
         FileviewHelper.FileviewApply(empty);
 
-        TextViewSelectHint.setVisibility(VISIBLE);
         ChangeButtonState();
     }
 
@@ -579,6 +579,11 @@ public class MainActivity extends AppCompatActivity {
             ButtonClear.setEnabled(true);
         else
             ButtonClear.setEnabled(false);
+
+        if (APKFiles != null && APKFiles.length > 0)
+            TextViewSelectHint.setVisibility(View.GONE);
+        else
+            TextViewSelectHint.setVisibility(VISIBLE);
     }
 
     public void ChangeStateText(String text) {
@@ -633,6 +638,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreateContextMenu(menu, v, menuInfo);
 
         menu.add("Install");
+        menu.add("Remove");
         menu.add("Delete");
     }
 
@@ -653,49 +659,78 @@ public class MainActivity extends AppCompatActivity {
         String apkTargetPath = isConverted ? apkOutPath : apkPath;
         File apkTargetFile = isConverted ? apkOutFile : apkFile;
 
-        if (item.getTitle() == "Install") {
-            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
 
-            builder.setTitle("Do you want to install?");
-            builder.setMessage(apkTargetPath);
+        if (IsProcessRunning) {
+            builder.setTitle("");
+            builder.setMessage("Can't do this action while processing");
 
-            builder.setPositiveButton("YES", (dialog, which) -> {
-                try {
-                    PermissionHelper.AskInstallPermission();
-
-                    // Create Uri
-                    Uri apkUri = getUriForFile(_this, getPackageName(), apkTargetFile);
-
-                    // Intent to open apk
-                    Intent intent = new Intent(Intent.ACTION_VIEW, apkUri);
-                    intent.setDataAndType(apkUri, "application/vnd.android.package-archive");
-                    intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                    startActivity(intent);
-                } catch (Settings.SettingNotFoundException e) {
-                    ChangeStateText("### ERROR\n---\n\n" + e);
-                }
-
+            builder.setPositiveButton("Close", (dialog, which) -> {
                 dialog.dismiss();
-            }).setNegativeButton("NO", (dialog, which) -> dialog.dismiss());
+            });
+        } else {
+            if (item.getTitle() == "Install") {
 
-            AlertDialog alert = builder.create();
-            alert.show();
+                builder.setTitle("Do you want to install?");
+                builder.setMessage(apkTargetPath);
+
+                builder.setPositiveButton("YES", (dialog, which) -> {
+                    try {
+                        PermissionHelper.AskInstallPermission();
+
+                        // Create Uri
+                        Uri apkUri = getUriForFile(_this, getPackageName(), apkTargetFile);
+
+                        // Intent to open apk
+                        Intent intent = new Intent(Intent.ACTION_VIEW, apkUri);
+                        intent.setDataAndType(apkUri, "application/vnd.android.package-archive");
+                        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                        startActivity(intent);
+                    } catch (Settings.SettingNotFoundException e) {
+                        ChangeStateText("## ERROR\n\n" + e);
+                    }
+
+                    dialog.dismiss();
+                }).setNegativeButton("NO", (dialog, which) -> dialog.dismiss());
+            }
+
+            if (item.getTitle() == "Remove") {
+                builder.setTitle("Do you want to remove?");
+                builder.setMessage(apkTargetPath);
+
+                builder.setPositiveButton("YES", (dialog, which) -> {
+                    List<String> list = new ArrayList<String>(Arrays.asList(APKFiles));
+                    list.remove(info.position);
+                    APKFiles = list.toArray(new String[0]);
+
+                    FileviewHelper.FileviewApply(APKFiles);
+                    ChangeButtonState();
+
+                    dialog.dismiss();
+                }).setNegativeButton("NO", (dialog, which) -> dialog.dismiss());
+            }
+
+            if (item.getTitle() == "Delete") {
+                builder.setTitle("Do you want to delete?");
+                builder.setMessage(apkTargetPath);
+
+                builder.setPositiveButton("YES", (dialog, which) -> {
+                    List<String> list = new ArrayList<String>(Arrays.asList(APKFiles));
+                    list.remove(info.position);
+                    APKFiles = list.toArray(new String[0]);
+
+                    FileviewHelper.FileviewApply(APKFiles);
+                    ChangeButtonState();
+
+                    apkTargetFile.delete();
+
+                    dialog.dismiss();
+                }).setNegativeButton("NO", (dialog, which) -> dialog.dismiss());
+            }
         }
 
-        if (item.getTitle() == "Delete") {
-            AlertDialog.Builder builder = new AlertDialog.Builder(this);
-
-            builder.setTitle("Do you want to delete?");
-            builder.setMessage(apkTargetPath);
-
-            builder.setPositiveButton("YES", (dialog, which) -> {
-                apkTargetFile.delete();
-                dialog.dismiss();
-            }).setNegativeButton("NO", (dialog, which) -> dialog.dismiss());
-
-            AlertDialog alert = builder.create();
-            alert.show();
-        }
+        AlertDialog alert = builder.create();
+        alert.show();
 
         return super.onContextItemSelected(item);
     }
