@@ -495,6 +495,9 @@ public class MainActivity extends AppCompatActivity {
                             "--ks", keystore.getPath(),
                             "--key-pass", "pass:forpico2dock",
                             "--ks-pass", "pass:forpico2dock",
+                            "--min-sdk-version", "29",
+                            "--max-sdk-version", "29",
+                            "--v4-signing-enabled", "false",
                             "--in", dirApkUnsing.getPath(),
                             "--out", dirApkOut.getPath(),
                     };
