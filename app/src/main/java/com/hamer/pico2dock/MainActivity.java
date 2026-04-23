@@ -38,12 +38,15 @@ import com.developer.filepicker.view.FilePickerDialog;
 import com.reandroid.apkeditor.compile.BuildOptions;
 import com.reandroid.apkeditor.decompile.DecompileOptions;
 
-import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
 import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.stream.Stream;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -52,11 +55,6 @@ import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathExpression;
-import javax.xml.xpath.XPathExpressionException;
-import javax.xml.xpath.XPathFactory;
 
 import io.noties.markwon.Markwon;
 
@@ -284,198 +282,160 @@ public class MainActivity extends AppCompatActivity {
 
                     String androidSpace = "http://schemas.android.com/apk/res/android";
 
+                    DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+                    factory.setNamespaceAware(true);
+                    DocumentBuilder builder = factory.newDocumentBuilder();
                     File xmlFile = new File(dirWorker + "/AndroidManifest.xml");
-                    DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
-                    dbFactory.setNamespaceAware(true);
-                    DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
-                    Document doc = dBuilder.parse(xmlFile);
-                    doc.getDocumentElement().normalize();
+                    Document xmlDoc = builder.parse(xmlFile);
 
-                    Element xmlRoot = doc.getDocumentElement();
+                    Element xmlRoot = xmlDoc.getDocumentElement();
+
+                    NodeList applications = xmlRoot.getElementsByTagName("application");
+                    Element application = (Element) applications.item(0);
 
                     // Add docked attribute
                     if (true) {
-                        Element metaData = doc.createElement("meta-data");
+                        Element metaData = xmlDoc.createElement("meta-data");
                         metaData.setAttributeNS(androidSpace, "android:name", "pico.vr.position");
                         metaData.setAttributeNS(androidSpace, "android:value", IsHideDock ? "near_dialog" : "near");
 
-                        NodeList applications = xmlRoot.getElementsByTagName("application");
-                        for (int i = 0; i < applications.getLength(); i++) {
-                            Element application = (Element) applications.item(i);
+                        // Add metaData to all activities and activity-alias elements under application
+                        NodeList activities = application.getElementsByTagName("activity");
+                        for (int i = 0; i < activities.getLength(); i++) {
+                            activities.item(i).appendChild(metaData.cloneNode(true));
+                        }
 
-                            NodeList activities = application.getElementsByTagName("activity");
-                            for (int j = 0; j < activities.getLength(); j++) {
-                                Element activity = (Element) activities.item(j);
-                                activity.appendChild(metaData.cloneNode(true));
-                            }
-
-                            NodeList aliases = application.getElementsByTagName("activity-alias");
-                            for (int j = 0; j < aliases.getLength(); j++) {
-                                Element alias = (Element) aliases.item(j);
-                                alias.appendChild(metaData.cloneNode(true));
-                            }
+                        NodeList aliases = application.getElementsByTagName("activity-alias");
+                        for (int i = 0; i < aliases.getLength(); i++) {
+                            aliases.item(i).appendChild(metaData.cloneNode(true));
                         }
                     }
 
                     // Pico tag
                     if (true) {
-                        Element application = (Element) xmlRoot.getElementsByTagName("application").item(0);
+                        Element metaDataIsPUI = xmlDoc.createElement("meta-data");
+                        metaDataIsPUI.setAttributeNS(androidSpace, "android:name", "isPUI");
+                        metaDataIsPUI.setAttributeNS(androidSpace, "android:value", "1");
+                        application.appendChild(metaDataIsPUI);
 
-                        Element metaData1 = doc.createElement("meta-data");
-                        metaData1.setAttributeNS(androidSpace, "android:name", "isPUI");
-                        metaData1.setAttributeNS(androidSpace, "android:value", "1");
-                        application.appendChild(metaData1);
+                        Element metaDataVRShell = xmlDoc.createElement("meta-data");
+                        metaDataVRShell.setAttributeNS(androidSpace, "android:name", "pvr.vrshell.mode");
+                        metaDataVRShell.setAttributeNS(androidSpace, "android:value", "1");
+                        application.appendChild(metaDataVRShell);
 
-                        Element metaData2 = doc.createElement("meta-data");
-                        metaData2.setAttributeNS(androidSpace, "android:name", "pvr.vrshell.mode");
-                        metaData2.setAttributeNS(androidSpace, "android:value", "1");
-                        application.appendChild(metaData2);
-
-                        Element metaData3 = doc.createElement("meta-data");
-                        metaData3.setAttributeNS(androidSpace, "android:name", "pico_permission_dim_show");
-                        metaData3.setAttributeNS(androidSpace, "android:value", "false");
-                        application.appendChild(metaData3);
+                        Element metaDataPermissionDimShow = xmlDoc.createElement("meta-data");
+                        metaDataPermissionDimShow.setAttributeNS(androidSpace, "android:name", "pico_permission_dim_show");
+                        metaDataPermissionDimShow.setAttributeNS(androidSpace, "android:value", "false");
+                        application.appendChild(metaDataPermissionDimShow);
                     }
+
+                    // Get package name and generate new package name
+                    String packageName = xmlRoot.getAttribute("package");
+                    String ranPrefix = Utils.generateString(6);
+                    String newPackageName = packageName + ranPrefix;
 
                     // Random package name
                     if (IsRePackage) {
-                        String packageName = xmlRoot.getAttribute("package");
-                        String ranPrefix = Utils.generateString(6);
-                        String newPackageName = packageName + ranPrefix;
-
-                        // Change package name
                         xmlRoot.setAttribute("package", newPackageName);
 
                         if (IsRePackageAdv) {
                             String sharedUserId = xmlRoot.getAttributeNS(androidSpace, "sharedUserId");
                             if (sharedUserId != null && !sharedUserId.isEmpty()) {
-                                xmlRoot.setAttributeNS(androidSpace, "sharedUserId", sharedUserId.replace(packageName, newPackageName));
+                                String newSharedUserId = sharedUserId.replace(packageName, newPackageName);
+                                xmlRoot.setAttributeNS(androidSpace, "android:sharedUserId", newSharedUserId);
                             }
                         }
 
-                        NodeList applicationNodes = xmlRoot.getElementsByTagName("application");
-                        for (int i = 0; i < applicationNodes.getLength(); i++) {
-                            Element application = (Element) applicationNodes.item(i);
-                            NodeList providers = application.getElementsByTagName("provider");
-                            for (int j = 0; j < providers.getLength(); j++) {
-                                Element provider = (Element) providers.item(j);
-                                String value = provider.getAttributeNS(androidSpace, "authorities");
-                                if (value.contains(packageName)) {
-                                    provider.setAttributeNS(androidSpace, "authorities", value.replace(packageName, newPackageName));
-                                } else {
-                                    provider.setAttributeNS(androidSpace, "authorities", value + ranPrefix);
-                                }
+                        // Update providers authorities attribute
+                        NodeList providers = application.getElementsByTagName("provider");
+                        for (int i = 0; i < providers.getLength(); i++) {
+                            Element provider = (Element) providers.item(i);
+                            String authorities = provider.getAttributeNS(androidSpace, "authorities");
+                            if (authorities.contains(packageName)) {
+                                provider.setAttributeNS(androidSpace, "android:authorities", authorities.replace(packageName, newPackageName));
+                            } else {
+                                provider.setAttributeNS(androidSpace, "android:authorities", authorities + ranPrefix);
                             }
                         }
 
-                        // Change permission
-                        {
-                            XPathFactory xpathFactory = XPathFactory.newInstance();
-                            XPath xpath = xpathFactory.newXPath();
-                            try {
-                                XPathExpression permissionExpr = xpath.compile("//permission");
-                                NodeList permissionsList = (NodeList) permissionExpr.evaluate(xmlRoot, XPathConstants.NODESET);
-                                for (int i = 0; i < permissionsList.getLength(); i++) {
-                                    Element permission = (Element) permissionsList.item(i);
-                                    String value = permission.getAttributeNS(androidSpace, "name");
-                                    if (IsRePackageAdv) {
-                                        permission.setAttributeNS(androidSpace, "name", value.replace(packageName, newPackageName));
-                                    } else {
-                                        permission.setAttributeNS(androidSpace, "name", value + ranPrefix);
-                                    }
-                                }
+                        // Change permissions
+                        NodeList permissionsList = xmlRoot.getElementsByTagName("permission");
+                        for (int i = 0; i < permissionsList.getLength(); i++) {
+                            Element permission = (Element) permissionsList.item(i);
+                            String name = permission.getAttributeNS(androidSpace, "name");
+                            if (IsRePackageAdv) {
+                                permission.setAttributeNS(androidSpace, "android:name", name.replace(packageName, newPackageName));
+                            } else {
+                                permission.setAttributeNS(androidSpace, "android:name", name + ranPrefix);
+                            }
+                        }
 
-                                XPathExpression usesPermissionExpr = xpath.compile("//uses-permission");
-                                NodeList usesPermissionsList = (NodeList) usesPermissionExpr.evaluate(xmlRoot, XPathConstants.NODESET);
-                                for (int i = 0; i < usesPermissionsList.getLength(); i++) {
-                                    Element permission = (Element) usesPermissionsList.item(i);
-                                    String value = permission.getAttributeNS(androidSpace, "name");
-                                    if (IsRePackageAdv) {
-                                        permission.setAttributeNS(androidSpace, "name", value.replace(packageName, newPackageName));
-                                    } else {
-                                        permission.setAttributeNS(androidSpace, "name", value + ranPrefix);
-                                    }
-                                }
+                        NodeList usesPermissionsList = xmlRoot.getElementsByTagName("uses-permission");
+                        for (int i = 0; i < usesPermissionsList.getLength(); i++) {
+                            Element usesPermission = (Element) usesPermissionsList.item(i);
+                            String name = usesPermission.getAttributeNS(androidSpace, "name");
+                            if (IsRePackageAdv) {
+                                usesPermission.setAttributeNS(androidSpace, "android:name", name.replace(packageName, newPackageName));
+                            } else {
+                                usesPermission.setAttributeNS(androidSpace, "android:name", name + ranPrefix);
+                            }
+                        }
 
-                                if (IsRePackageAdv) {
-                                    XPathExpression activityAliasExpr = xpath.compile("//activity-alias");
-                                    NodeList activityAliasList = (NodeList) activityAliasExpr.evaluate(xmlRoot, XPathConstants.NODESET);
-                                    for (int i = 0; i < activityAliasList.getLength(); i++) {
-                                        Element activityAlias = (Element) activityAliasList.item(i);
-                                        String value = activityAlias.getAttributeNS(androidSpace, "name");
-                                        activityAlias.setAttributeNS(androidSpace, "name", value.replace(packageName, newPackageName));
-                                    }
-                                }
-                            } catch (XPathExpressionException error) {
-                                errorMessage = "```\n" + error.toString() + "\n```";
-                                FileviewHelper.FileviewChangeText(index, "❌ " + file + " ⭕ " + error.toString());
-
-                                continue;
+                        if (IsRePackageAdv) {
+                            NodeList activityAliases = application.getElementsByTagName("activity-alias");
+                            for (int i = 0; i < activityAliases.getLength(); i++) {
+                                Element alias = (Element) activityAliases.item(i);
+                                String name = alias.getAttributeNS(androidSpace, "name");
+                                alias.setAttributeNS(androidSpace, "android:name", name.replace(packageName, newPackageName));
                             }
                         }
                     }
 
+                    // Handle application label
                     if (!NamePrefix.isEmpty()) {
-                        Element application = (Element) xmlRoot.getElementsByTagName("application").item(0);
-                        Attr labelAttr = application.getAttributeNodeNS(androidSpace, "label");
-
                         if (IsRename) {
-                            if (labelAttr != null) {
-                                labelAttr.setValue(NamePrefix);
-                            } else {
-                                application.setAttributeNS(androidSpace, "android:label", NamePrefix);
-                            }
+                            application.setAttributeNS(androidSpace, "android:label", NamePrefix);
                         } else {
-                            String stringID = "app_name";
-                            if (labelAttr != null) {
-                                String val = labelAttr.getValue();
-                                if (val != null) {
-                                    stringID = val.replace("@string/", "");
-                                }
-                            }
+                            String label = application.getAttributeNS(androidSpace, "label");
+                            String stringID = (label != null && label.startsWith("@string/")) ? label.substring(8) : "app_name";
 
-                            File resDir = new File(dirWorker + "/resources/package_1/res");
-                            File[] dirs = resDir.listFiles(File::isDirectory);
-                            if (dirs != null) {
-                                for (File dir : dirs) {
-                                    if (dir.getName().contains("values")) {
-                                        File stringsFile = new File(dir, "strings.xml");
-                                        if (stringsFile.exists()) {
-                                            DocumentBuilderFactory sFactory = DocumentBuilderFactory.newInstance();
-                                            DocumentBuilder sBuilder = sFactory.newDocumentBuilder();
-                                            Document stringDoc = sBuilder.parse(stringsFile);
-                                            stringDoc.getDocumentElement().normalize();
-
-                                            NodeList stringNodes = stringDoc.getElementsByTagName("string");
-                                            for (int i = 0; i < stringNodes.getLength(); i++) {
-                                                Element srt = (Element) stringNodes.item(i);
-                                                if (srt.hasAttribute("name") && srt.getAttribute("name").contains(stringID)) {
-                                                    String currentValue = srt.getTextContent();
-                                                    srt.setTextContent(currentValue + NamePrefix);
+                            // Iterate over res/values* directories and update strings.xml
+                            Path resPath = Paths.get(dirWorker + "/resources/package_1/res");
+                            try (Stream<Path> dirs = Files.list(resPath)) {
+                                dirs.filter(Files::isDirectory)
+                                        .filter(dir -> dir.getFileName().toString().contains("values"))
+                                        .forEach(dir -> {
+                                            Path stringsFile = dir.resolve("strings.xml");
+                                            if (Files.exists(stringsFile)) {
+                                                try {
+                                                    Document stringDoc = builder.parse(stringsFile.toFile());
+                                                    Element stringRoot = stringDoc.getDocumentElement();
+                                                    NodeList strings = stringRoot.getElementsByTagName("string");
+                                                    for (int i = 0; i < strings.getLength(); i++) {
+                                                        Element srt = (Element) strings.item(i);
+                                                        String nameAttr = srt.getAttribute("name");
+                                                        if (nameAttr.contains(stringID)) {
+                                                            String currentValue = srt.getTextContent();
+                                                            srt.setTextContent(currentValue + NamePrefix);
+                                                        }
+                                                    }
+                                                    // Save updated strings.xml
+                                                    Transformer transformer = TransformerFactory.newInstance().newTransformer();
+                                                    transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+                                                    transformer.transform(new DOMSource(stringDoc), new StreamResult(stringsFile.toFile()));
+                                                } catch (Exception e) {
+                                                    e.printStackTrace();
                                                 }
                                             }
-
-                                            // Save changes back to file
-                                            TransformerFactory transformerFactory = TransformerFactory.newInstance();
-                                            Transformer transformer = transformerFactory.newTransformer();
-                                            transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-                                            DOMSource source = new DOMSource(stringDoc);
-                                            StreamResult result = new StreamResult(stringsFile);
-                                            transformer.transform(source, result);
-                                        }
-                                    }
-                                }
+                                        });
                             }
                         }
                     }
 
-                    // Save changes to file
-                    TransformerFactory transformerFactory = TransformerFactory.newInstance();
-                    Transformer transformer = transformerFactory.newTransformer();
+                    // Save the modified AndroidManifest.xml
+                    Transformer transformer = TransformerFactory.newInstance().newTransformer();
                     transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-                    DOMSource source = new DOMSource(doc);
-                    StreamResult result = new StreamResult(xmlFile);
-                    transformer.transform(source, result);
+                    transformer.transform(new DOMSource(xmlDoc), new StreamResult(xmlFile));
                 } catch (Exception error) {
                     errorMessage = "```\n" + error.toString() + "\n```";
                     FileviewHelper.FileviewChangeText(index, "❌ " + file + " ⭕ " + error.toString());
