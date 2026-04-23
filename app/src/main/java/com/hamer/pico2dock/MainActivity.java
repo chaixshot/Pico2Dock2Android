@@ -599,12 +599,12 @@ public class MainActivity extends AppCompatActivity {
         startActivity(intent);
     }
 
-    private void IncreaseProgressBar(int count, int time) {
+    private void IncreaseProgressBar(double count, double time) {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 StatusProgressBar.setVisibility(VISIBLE);
-                StatusProgressBar.incrementProgressBy(((95 / 5) * time) / count);
+                StatusProgressBar.incrementProgressBy((int) Math.round(((95 / 5) * time) / count));
                 PercentText.setText(StatusProgressBar.getProgress() + "%");
             }
         });
