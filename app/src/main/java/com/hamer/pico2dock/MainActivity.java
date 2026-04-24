@@ -38,6 +38,7 @@ import com.developer.filepicker.view.FilePickerDialog;
 import com.reandroid.apkeditor.compile.BuildOptions;
 import com.reandroid.apkeditor.decompile.DecompileOptions;
 import com.reandroid.apkeditor.merge.MergerOptions;
+import com.reandroid.archive.ZipAlign;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -221,22 +222,31 @@ public class MainActivity extends AppCompatActivity {
                 FileviewHelper.FileviewChangeText(index, "🛠️ " + file);
                 FileviewHelper.FileviewSelect(index);
 
+                //?? -------------------- [[ Check file access ]] --------------------
+                if (!apkFile.exists() || !apkFile.isFile() || !apkFile.canRead()) {
+                    errorMessage = "Can't access file \"" + apkFile.getPath() + "\"";
+                    FileviewHelper.FileviewChangeText(index, "❌ " + apkFile.getPath() + " ⭕ " + errorMessage);
+
+                    continue;
+                }
+
                 //?? -------------------- [[ Convert APKM to APK ]] --------------------
                 if (file.endsWith(".xapk") || file.endsWith(".apkm") || file.endsWith(".apks")) {
                     try {
                         ChangeStateText("## Current Status\nMerging **" + apkName + "**...");
                         IncreaseProgressBar(apkFiles.length, 1);
 
-                        String nameName = apkName.replace(".xapk", ".apk").replace(".apkm", ".apk").replace(".apks", ".apk");
+                        String newName = apkName.replace(".xapk", ".apk").replace(".apkm", ".apk").replace(".apks", ".apk");
                         MergerOptions options = new MergerOptions();
                         options.inputFile = apkFile;
-                        options.outputFile = new File(dirPico2Dock, "Apkm/" + nameName);
+                        options.outputFile = new File(dirPico2Dock, "Merger/" + newName);
+//                        options.force = true;
 
                         Merger executor = new Merger(options, apkName);
                         executor.runCommand();
 
-                        apkName = nameName;
-                        apkFile = new File(dirPico2Dock, "Apkm/" + apkName);
+                        apkName = newName;
+                        apkFile = new File(dirPico2Dock, "Merger/" + apkName);
                         dirApkOut = new File(dirOut, "Pico_" + apkName);
                         dirApkUnsing = new File(dirUnsign, apkName);
                     } catch (IOException error) {
@@ -258,13 +268,6 @@ public class MainActivity extends AppCompatActivity {
                     }
                 } else
                     IncreaseProgressBar(apkFiles.length, 1);
-
-                if (!apkFile.exists() || !apkFile.isFile() || !apkFile.canRead()) {
-                    errorMessage = "Can't access file \"" + apkFile.getPath() + "\"";
-                    FileviewHelper.FileviewChangeText(index, "❌ " + apkFile.getPath() + " ⭕ " + errorMessage);
-
-                    continue;
-                }
 
                 //?? -------------------- [[ Rename ]] --------------------
                 if (dirApkOut.exists()) {
@@ -534,6 +537,13 @@ public class MainActivity extends AppCompatActivity {
                     if (!dirOut.exists())
                         dirOut.mkdir();
 
+                    // zipalign
+                    File align = new File(dirApkUnsing.getAbsolutePath().replace(dirApkUnsing.getName(), "") + "align_" + dirApkUnsing.getName());
+                    ZipAlign.alignApk(dirApkUnsing, align);
+                    dirApkUnsing.delete();
+                    align.renameTo(dirApkUnsing);
+
+                    // Uber signer
                     String[] arg = new String[]{
                             "sign",
                             "--ks", keystore.getPath(),
@@ -546,7 +556,6 @@ public class MainActivity extends AppCompatActivity {
                             "--out", dirApkOut.getPath(),
                     };
                     ApkSignerTool.main(arg);
-
                     File idsig = new File(dirApkOut, ".idsig");
                     idsig.delete();
                 } catch (Exception error) {
