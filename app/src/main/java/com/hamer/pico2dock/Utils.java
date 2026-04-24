@@ -50,6 +50,7 @@ public class Utils {
     public static void CleanupTempDir() {
         CleanupDir("storage/emulated/0/Pico2Dock/Worker");
         CleanupDir("storage/emulated/0/Pico2Dock/Unsign");
+        CleanupDir("storage/emulated/0/Pico2Dock/Apkm");
     }
 
     public static String generateString(int length) {

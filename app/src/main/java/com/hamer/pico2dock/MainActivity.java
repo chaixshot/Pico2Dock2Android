@@ -37,12 +37,14 @@ import com.developer.filepicker.model.DialogProperties;
 import com.developer.filepicker.view.FilePickerDialog;
 import com.reandroid.apkeditor.compile.BuildOptions;
 import com.reandroid.apkeditor.decompile.DecompileOptions;
+import com.reandroid.apkeditor.merge.MergerOptions;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -132,7 +134,7 @@ public class MainActivity extends AppCompatActivity {
             properties.root = new File(DialogConfigs.DEFAULT_DIR);
             properties.error_dir = new File(DialogConfigs.DEFAULT_DIR);
             properties.offset = new File(DialogConfigs.DEFAULT_DIR);
-            properties.extensions = new String[]{"apk"};
+            properties.extensions = new String[]{"apk", "xapk", "apkm", "apks"};
             properties.show_hidden_files = false;
 
             FilePickerDialog dialog = new FilePickerDialog(MainActivity.this, properties);
@@ -200,37 +202,54 @@ public class MainActivity extends AppCompatActivity {
             Utils.CleanupTempDir();
 
             for (String file : apkFiles) {
-                File apkFile = new File(file);
-                String apkName = apkFile.getName();
-                String filePath = apkFile.getAbsolutePath().replace(apkName, "");
-
-                Boolean isExist = apkFile.exists();
-                Boolean isFile = apkFile.isFile();
-                Boolean isReadable = apkFile.canRead();
-
-                errorMessage = "";
-
                 // skip is file error from previous task
                 if (file.contains("❌"))
                     continue;
+                errorMessage = "";
+
+                File apkFile = new File(file);
+                String apkName = apkFile.getName();
+                String filePath = apkFile.getAbsolutePath().replace(apkName, "");
+                File dirPico2Dock = new File("storage/emulated/0/Pico2Dock");
+                File dirWorker = new File(dirPico2Dock, "Worker");
+                File dirUnsign = new File(dirPico2Dock, "Unsign");
+                File dirOut = new File(filePath, "Pico");
+                File dirApkOut = new File(dirOut, "Pico_" + apkName);
+                File dirApkUnsing = new File(dirUnsign, apkName);
 
                 //?? -------------------- [[ File indicator ]] --------------------
                 FileviewHelper.FileviewChangeText(index, "🛠️ " + file);
                 FileviewHelper.FileviewSelect(index);
 
-                File dirPico2Dock = new File("storage/emulated/0/Pico2Dock");
-                File dirWorker = new File(dirPico2Dock + "/Worker");
-                File dirUnsign = new File(dirPico2Dock + "/Unsign");
-                File dirOut = new File(filePath + "/Pico");
-                File dirApkOut = new File(dirOut + "/Pico_" + apkName);
-                File dirApkUnsing = new File(dirUnsign + "/" + apkName);
+                //?? -------------------- [[ Convert APKM to APK ]] --------------------
+                if (file.endsWith(".xapk") || file.endsWith(".apkm") || file.endsWith(".apks")) {
+                    try {
+                        ChangeStateText("## Current Status\nMerging **" + apkName + "**...");
 
-                if (!dirOut.exists())
-                    dirOut.mkdir();
+                        String nameName = apkName.replace(".xapk", ".apk").replace(".apkm", ".apk").replace(".apks", ".apk");
+                        MergerOptions options = new MergerOptions();
+                        options.inputFile = apkFile;
+                        options.outputFile = new File(dirPico2Dock, "Apkm/" + nameName);
 
-                if (!isExist || !isFile || !isReadable) {
-                    errorMessage = "Can't access file \"" + file + "\"";
-                    FileviewHelper.FileviewChangeText(index, "❌ " + file + " ⭕ " + errorMessage);
+                        Merger executor = new Merger(options, apkName);
+                        executor.runCommand();
+
+                        apkName = nameName;
+                        apkFile = new File(dirPico2Dock, "Apkm/" + apkName);
+                        dirApkOut = new File(dirOut, "Pico_" + apkName);
+                        dirApkUnsing = new File(dirUnsign, apkName);
+                    } catch (IOException error) {
+                        errorMessage = "```\n" + error.toString() + "\n```";
+                        FileviewHelper.FileviewChangeText(index, "❌ " + apkFile.getPath() + " ⭕ " + error.toString());
+                        IncreaseProgressBar(apkFiles.length, 4);
+
+                        continue;
+                    }
+                }
+
+                if (!apkFile.exists() || !apkFile.isFile() || !apkFile.canRead()) {
+                    errorMessage = "Can't access file \"" + apkFile.getPath() + "\"";
+                    FileviewHelper.FileviewChangeText(index, "❌ " + apkFile.getPath() + " ⭕ " + errorMessage);
 
                     continue;
                 }
@@ -255,19 +274,19 @@ public class MainActivity extends AppCompatActivity {
                     DecompileOptions options = new DecompileOptions();
                     options.inputFile = apkFile;
                     options.outputFile = dirWorker;
-                    options.loadDex = 1; // 1.4.2++
+                    options.loadDex = 10; // 1.4.2++
 
                     Decompiler executor = new Decompiler(options, apkName);
                     executor.runCommand();
                 } catch (Exception error) {
                     errorMessage = "```\n" + error.toString() + "\n```";
-                    FileviewHelper.FileviewChangeText(index, "❌ " + file + " ⭕ " + error.toString());
+                    FileviewHelper.FileviewChangeText(index, "❌ " + apkFile.getPath() + " ⭕ " + error.toString());
                     IncreaseProgressBar(apkFiles.length, 4);
 
                     continue;
                 } catch (OutOfMemoryError error) {
                     errorMessage = "Out of memory";
-                    FileviewHelper.FileviewChangeText(index, "❌ " + file + " ⭕ " + errorMessage);
+                    FileviewHelper.FileviewChangeText(index, "❌ " + apkFile.getPath() + " ⭕ " + errorMessage);
                     IncreaseProgressBar(apkFiles.length, 4);
 
                     continue;
@@ -284,7 +303,7 @@ public class MainActivity extends AppCompatActivity {
                     DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
                     factory.setNamespaceAware(true);
                     DocumentBuilder builder = factory.newDocumentBuilder();
-                    File xmlFile = new File(dirWorker + "/AndroidManifest.xml");
+                    File xmlFile = new File(dirWorker, "/AndroidManifest.xml");
                     Document xmlDoc = builder.parse(xmlFile);
 
                     Element xmlRoot = xmlDoc.getDocumentElement();
@@ -450,7 +469,7 @@ public class MainActivity extends AppCompatActivity {
                     transformer.transform(new DOMSource(xmlDoc), new StreamResult(xmlFile));
                 } catch (Exception error) {
                     errorMessage = "```\n" + error.toString() + "\n```";
-                    FileviewHelper.FileviewChangeText(index, "❌ " + file + " ⭕ " + error.toString());
+                    FileviewHelper.FileviewChangeText(index, "❌ " + apkFile.getPath() + " ⭕ " + error.toString());
                     IncreaseProgressBar(apkFiles.length, 3);
 
                     continue;
@@ -472,13 +491,13 @@ public class MainActivity extends AppCompatActivity {
                     executor.runCommand();
                 } catch (Exception error) {
                     errorMessage = "```\n" + error.toString() + "\n```";
-                    FileviewHelper.FileviewChangeText(index, "❌ " + file + " ⭕ " + error.toString());
+                    FileviewHelper.FileviewChangeText(index, "❌ " + apkFile.getPath() + " ⭕ " + error.toString());
                     IncreaseProgressBar(apkFiles.length, 2);
 
                     continue;
                 } catch (OutOfMemoryError error) {
                     errorMessage = "Out of memory";
-                    FileviewHelper.FileviewChangeText(index, "❌ " + file + " ⭕ " + errorMessage);
+                    FileviewHelper.FileviewChangeText(index, "❌ " + apkFile.getPath() + " ⭕ " + errorMessage);
                     IncreaseProgressBar(apkFiles.length, 2);
 
                     continue;
@@ -489,6 +508,9 @@ public class MainActivity extends AppCompatActivity {
                 try {
                     ChangeStateText("## Current Status\nSigning **" + apkName + "**...");
                     IncreaseProgressBar(apkFiles.length, 1);
+
+                    if (!dirOut.exists())
+                        dirOut.mkdir();
 
                     String[] arg = new String[]{
                             "sign",
@@ -503,11 +525,11 @@ public class MainActivity extends AppCompatActivity {
                     };
                     ApkSignerTool.main(arg);
 
-                    File idsig = new File(dirApkOut + ".idsig");
+                    File idsig = new File(dirApkOut, ".idsig");
                     idsig.delete();
                 } catch (Exception error) {
                     errorMessage = "```\n" + error.toString() + "\n```";
-                    FileviewHelper.FileviewChangeText(index, "❌ " + file + " ⭕ " + error.toString());
+                    FileviewHelper.FileviewChangeText(index, "❌ " + apkFile.getPath() + " ⭕ " + error.toString());
                     IncreaseProgressBar(apkFiles.length, 1);
 
                     continue;

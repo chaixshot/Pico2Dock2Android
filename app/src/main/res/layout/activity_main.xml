@@ -77,7 +77,7 @@
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="2dp"
-                                android:text="Convert the APK app from Floating to Dashboard Dock for Pico 4, alike File Manager." />
+                                android:text="Convert the (X)APK(M, S) app from Floating to Dashboard Dock for Pico 4, alike File Manager." />
 
                             <TextView
                                 android:id="@+id/textView5"
@@ -127,7 +127,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:enabled="false"
-                                android:text="A large APK file might run out of memory, using desktop version instead."
+                                android:text="Too large file might run out of memory, using desktop version instead."
                                 android:textSize="12sp"
                                 android:visibility="visible" />
 
