@@ -43,6 +43,8 @@ import com.reandroid.archive.ZipAlign;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
+import org.zeroturnaround.zip.NameMapper;
+import org.zeroturnaround.zip.ZipUtil;
 
 import java.io.File;
 import java.io.IOException;
@@ -52,6 +54,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -232,21 +235,48 @@ public class MainActivity extends AppCompatActivity {
 
                 //?? -------------------- [[ Convert APKM to APK ]] --------------------
                 if (file.endsWith(".xapk") || file.endsWith(".apkm") || file.endsWith(".apks")) {
-                    try {
-                        ChangeStateText("## Current Status\nMerging **" + apkName + "**...");
-                        IncreaseProgressBar(apkFiles.length, 1);
+                    File dirMerger = new File(dirPico2Dock, "Merger");
+                    File dirZipper = new File(dirPico2Dock, "Zipper");
+                    File dirZipUnpack = new File(dirZipper, "Unpack");
 
+                    IncreaseProgressBar(apkFiles.length, 1);
+
+                    try {
+                        // Remove unnecessary architecture
+                        if (true) {
+                            ChangeStateText("## Current Status\nReducing **" + apkName + "** size...");
+
+                            if (!dirZipper.exists())
+                                dirZipper.mkdir();
+
+                            ZipUtil.unpack(apkFile, dirZipUnpack, new NameMapper() {
+                                public String map(String name) {
+                                    if (!Pattern.matches("config.*.apk", name) || Pattern.matches(".*arm64_v8a.*", name)) {
+                                        return name;
+                                    } else {
+                                        return null;
+                                    }
+                                }
+                            });
+
+                            apkFile = new File(dirZipper, apkName);
+                            ZipUtil.pack(dirZipUnpack, apkFile);
+                        }
+
+                        ChangeStateText("## Current Status\nMerging **" + apkName + "**...");
+
+                        // Start merge split APK
                         String newName = apkName.replace(".xapk", ".apk").replace(".apkm", ".apk").replace(".apks", ".apk");
                         MergerOptions options = new MergerOptions();
                         options.inputFile = apkFile;
-                        options.outputFile = new File(dirPico2Dock, "Merger/" + newName);
-//                        options.force = true;
+                        options.outputFile = new File(dirPico2Dock, dirMerger + newName);
 
                         Merger executor = new Merger(options, apkName);
                         executor.runCommand();
 
+                        // Change APK target to merged file
                         apkName = newName;
-                        apkFile = new File(dirPico2Dock, "Merger/" + apkName);
+                        apkFile = new File(dirPico2Dock, dirMerger + apkName);
                         dirApkOut = new File(dirOut, "Pico_" + apkName);
                         dirApkUnsing = new File(dirUnsign, apkName);
                     } catch (IOException error) {
