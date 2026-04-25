@@ -244,18 +244,26 @@ public class MainActivity extends AppCompatActivity {
                     try {
                         // Remove unnecessary architecture
                         if (true) {
-                            ChangeStateText("## Current Status\nReducing **" + apkName + "** size...");
+                            ChangeStateText("## Current Status\nRemoving unnecessary architecture **" + apkName + "**...");
 
                             if (!dirZipper.exists())
                                 dirZipper.mkdir();
 
                             ZipUtil.unpack(apkFile, dirZipUnpack, new NameMapper() {
+                                Boolean pickArm64v8a = false;
                                 public String map(String name) {
-                                    if (!Pattern.matches("config.*.apk", name) || Pattern.matches(".*arm64_v8a.*", name)) {
-                                        return name;
-                                    } else {
-                                        return null;
+                                    if (Pattern.matches("\\w*config.[\\w]{3,}.apk", name)) { // is architecture file
+                                        if (Pattern.matches(".*arm64_v8a.*", name)) { // is arm64_v8a
+                                            pickArm64v8a = true;
+                                        } else {
+                                            if (Pattern.matches(".*armeabi_v7a.*", name)) { // is armeabi_v7a
+                                                if (pickArm64v8a) // is no arm64_v8a
+                                                    return null;
+                                            } else
+                                                return null;
+                                        }
                                     }
+                                    return name;
                                 }
                             });
 
