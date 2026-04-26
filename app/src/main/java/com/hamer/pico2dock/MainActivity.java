@@ -44,6 +44,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.zeroturnaround.zip.NameMapper;
+import org.zeroturnaround.zip.ZipInfoCallback;
 import org.zeroturnaround.zip.ZipUtil;
 
 import java.io.File;
@@ -56,6 +57,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
+import java.util.zip.ZipEntry;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -254,21 +256,28 @@ public class MainActivity extends AppCompatActivity {
                             if (!dirZipper.exists())
                                 dirZipper.mkdir();
 
-                            String finalApkName = apkName;
-                            ZipUtil.unpack(apkFile, dirZipUnpack, new NameMapper() {
-                                Boolean pickArm64v8a = false;
+                            final String finalApkName = apkName;
+                            final Boolean[] pickArm64v8a = {false};
 
+                            ZipUtil.iterate(apkFile, new ZipInfoCallback() {
+                                public void process(ZipEntry zipEntry) throws IOException {
+                                    if (Pattern.matches(".*arm64_v8a.*", zipEntry.getName()))
+                                        pickArm64v8a[0] = true;
+                                }
+                            });
+
+                            ZipUtil.unpack(apkFile, dirZipUnpack, new NameMapper() {
                                 public String map(String name) {
                                     ChangeStateText("## Merger\n**" + finalApkName + "**\nRemoving unnecessary architecture...\n\n``" + name + "``");
 
                                     if (Pattern.matches("\\w*config.[\\w]{3,}.apk", name)) { // is architecture file
                                         if (Pattern.matches(".*arm64_v8a.*", name)) { // is arm64_v8a
-                                            pickArm64v8a = true;
+
                                         } else {
                                             if (Pattern.matches(".*armeabi_v7a.*", name)) { // is armeabi_v7a
-                                                if (pickArm64v8a) // is no arm64_v8a
+                                                if (pickArm64v8a[0]) // is no arm64_v8a
                                                     return null;
-                                            } else
+                                            } else if (!Pattern.matches(".*dpi.[a-z]{3,4}", name))// is not density qualifier
                                                 return null;
                                         }
                                     }
