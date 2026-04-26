@@ -244,15 +244,18 @@ public class MainActivity extends AppCompatActivity {
                     try {
                         // Remove unnecessary architecture
                         if (true) {
-                            ChangeStateText("## Current Status\nRemoving unnecessary architecture **" + apkName + "**...");
+                            ChangeStateText("## Merger\n**" + apkName + "**\nRemoving unnecessary architecture...");
 
                             if (!dirZipper.exists())
                                 dirZipper.mkdir();
 
+                            String finalApkName = apkName;
                             ZipUtil.unpack(apkFile, dirZipUnpack, new NameMapper() {
                                 Boolean pickArm64v8a = false;
 
                                 public String map(String name) {
+                                    ChangeStateText("## Merger\n**" + finalApkName + "**\nRemoving unnecessary architecture...\n\n``" + name + "``");
+
                                     if (Pattern.matches("\\w*config.[\\w]{3,}.apk", name)) { // is architecture file
                                         if (Pattern.matches(".*arm64_v8a.*", name)) { // is arm64_v8a
                                             pickArm64v8a = true;
@@ -272,7 +275,7 @@ public class MainActivity extends AppCompatActivity {
                             ZipUtil.pack(dirZipUnpack, apkFile);
                         }
 
-                        ChangeStateText("## Current Status\nMerging **" + apkName + "**...");
+                        ChangeStateText("## Merger\nMerging multiple splitted **" + apkName + "**...");
 
                         // Start merge split APK
                         String newName = apkName.replaceAll("\\.x?apk[ms]?", ".apk");
@@ -322,8 +325,8 @@ public class MainActivity extends AppCompatActivity {
                 //?? -------------------- [[ Start decompiler apk ]] --------------------
                 if (isCancelled()) break;
                 try {
-                    ChangeStateText("## Current Status\nDecompiling **" + apkName + "**...");
                     IncreaseProgressBar(apkFiles.length, 1);
+                    ChangeStateText("## Decoder\nDecompiling resources of **" + apkName + "**...");
 
                     DecompileOptions options = new DecompileOptions();
                     options.inputFile = apkFile;
@@ -539,8 +542,8 @@ public class MainActivity extends AppCompatActivity {
                 //?? -------------------- [[ Start compiler apk ]] --------------------
                 if (isCancelled()) break;
                 try {
-                    ChangeStateText("## Current Status\nCompiling **" + apkName + "**...");
                     IncreaseProgressBar(apkFiles.length, 1);
+                    ChangeStateText("## Encoder\nBuilding **" + apkName + "**...");
 
                     BuildOptions options = new BuildOptions();
 
@@ -571,8 +574,8 @@ public class MainActivity extends AppCompatActivity {
                 //?? -------------------- [[ Start signing apk ]] --------------------
                 if (isCancelled()) break;
                 try {
-                    ChangeStateText("## Current Status\nSigning **" + apkName + "**...");
                     IncreaseProgressBar(apkFiles.length, 1);
+                    ChangeStateText("## Signer\nSigning **" + apkName + "**");
 
                     if (!dirOut.exists())
                         dirOut.mkdir();
@@ -703,17 +706,6 @@ public class MainActivity extends AppCompatActivity {
         Uri uri = Uri.parse("https://github.com/chaixshot/Pico2DockAndroid");
         Intent intent = new Intent(Intent.ACTION_VIEW, uri);
         startActivity(intent);
-    }
-
-    private void IncreaseProgressBar(double count, double time) {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                StatusProgressBar.setVisibility(VISIBLE);
-                StatusProgressBar.incrementProgressBy((int) Math.round(((95 / 6) * time) / count));
-                PercentText.setText(StatusProgressBar.getProgress() + "%");
-            }
-        });
     }
 
     private void ResetAppearance() {

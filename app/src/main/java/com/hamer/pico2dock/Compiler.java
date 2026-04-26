@@ -17,7 +17,7 @@ public class Compiler extends com.reandroid.apkeditor.compile.Builder {
         super.logMessage(msg);
 
         if (mainActivity.findViewById(R.id.ButtonCancel).isEnabled())
-            mainActivity.ChangeStateText("## Current Status\nCompiling **" + apkName + "**...\n\n``" + msg + "``");
+            mainActivity.ChangeStateText("## Encoder\nBuilding **" + apkName + "**...\n\n``" + msg + "``");
     }
 
     @Override
@@ -25,7 +25,7 @@ public class Compiler extends com.reandroid.apkeditor.compile.Builder {
         super.logMessage(tag, msg);
 
         if (mainActivity.findViewById(R.id.ButtonCancel).isEnabled())
-            mainActivity.ChangeStateText("## Current Status\nCompiling **" + apkName + "**...\n\n``" + msg + "``");
+            mainActivity.ChangeStateText("## Encoder\nBuilding **" + apkName + "**...\n\n``" + msg + "``");
     }
 
     @Override
@@ -33,7 +33,7 @@ public class Compiler extends com.reandroid.apkeditor.compile.Builder {
         super.logVerbose(msg);
 
         if (mainActivity.findViewById(R.id.ButtonCancel).isEnabled())
-            mainActivity.ChangeStateText("## Current Status\nCompiling **" + apkName + "**...\n\n``" + msg + "``");
+            mainActivity.ChangeStateText("## Encoder\nBuilding **" + apkName + "**...\n\n``" + msg + "``");
     }
 
     @Override
@@ -41,7 +41,7 @@ public class Compiler extends com.reandroid.apkeditor.compile.Builder {
         super.logVerbose(tag, msg);
 
         if (mainActivity.findViewById(R.id.ButtonCancel).isEnabled())
-            mainActivity.ChangeStateText("## Current Status\nCompiling **" + apkName + "**...\n\n``" + msg + "``");
+            mainActivity.ChangeStateText("## Encoder\nBuilding **" + apkName + "**...\n\n``" + msg + "``");
     }
 
     @Override
@@ -49,7 +49,7 @@ public class Compiler extends com.reandroid.apkeditor.compile.Builder {
         super.logError(msg, tr);
 
         if (mainActivity.findViewById(R.id.ButtonCancel).isEnabled())
-            mainActivity.ChangeStateText("## Current Status\nCompiling **" + apkName + "**...\n\n``" + msg + "``");
+            mainActivity.ChangeStateText("## Encoder\nBuilding **" + apkName + "**...\n\n``" + msg + "``");
     }
 
     @Override
