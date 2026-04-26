@@ -21,11 +21,16 @@ android {
     defaultConfig {
         applicationId = "com.hamer.pico2dock"
         minSdk = 29
+        //noinspection ExpiredTargetSdkVersion
         targetSdk = 29
         versionCode = 1
         versionName = "1.0"
+        ndk {
+            abiFilters += listOf("arm64-v8a", "x86_64")
+        }
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        signingConfig = signingConfigs.getByName("pico2dock")
     }
 
     buildTypes {
