@@ -298,14 +298,14 @@ public class MainActivity extends AppCompatActivity {
                                 public String map(String name) {
                                     ChangeStateText("## Merger\n**" + finalApkName + "**\nRemoving unnecessary architecture...\n\n``" + name + "``");
 
-                                    if (Pattern.matches("\\w*config.[\\w]{3,}.apk", name)) { // is architecture file
+                                    if (Pattern.matches(".*config\\.\\w{3,}(?<!dpi)\\.apk$", name)) { // is architecture file
                                         if (Pattern.matches(".*arm64_v8a.*", name)) { // is arm64_v8a
 
                                         } else {
                                             if (Pattern.matches(".*armeabi_v7a.*", name)) { // is armeabi_v7a
                                                 if (pickArm64v8a[0]) // is no arm64_v8a
                                                     return null;
-                                            } else if (!Pattern.matches(".*dpi.[a-z]{3,4}", name))// is not density qualifier
+                                            } else
                                                 return null;
                                         }
                                     }
@@ -673,7 +673,7 @@ public class MainActivity extends AppCompatActivity {
             } else {
                 PercentText.setText("Successful");
 
-                ChangeStateText("## Current Status\nAll files have been modified.\n* You can install them using the APK files in Pico folder by the same folder as the original file.\n* Long click file in the box above to see the options.");
+                ChangeStateText("## Current Status\nAll files have been modified.\n* The APK files are in the Pico folder by the same directory as the original file.\n* Long click file in the box above to see the options.");
             }
 
             StatusProgressBar.setProgress(100);
