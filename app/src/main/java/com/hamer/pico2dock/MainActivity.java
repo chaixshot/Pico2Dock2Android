@@ -243,8 +243,8 @@ public class MainActivity extends AppCompatActivity {
                 errorMessage = "";
 
                 File apkFile = new File(file);
-                String apkName = apkFile.getName();
-                String filePath = apkFile.getAbsolutePath().replace(apkName, "");
+                String apkName = apkFile.getName(); // Including extension
+                String filePath = apkFile.getAbsolutePath().replaceAll(apkName + "$", "");
                 File dirPico2Dock = new File("storage/emulated/0/Pico2Dock");
                 File dirWorker = new File(dirPico2Dock, "Worker");
                 File dirUnsign = new File(dirPico2Dock, "Unsign");
@@ -625,7 +625,7 @@ public class MainActivity extends AppCompatActivity {
                         dirOut.mkdir();
 
                     // zipalign
-                    File align = new File(dirApkUnsing.getAbsolutePath().replace(dirApkUnsing.getName(), "") + "align_" + dirApkUnsing.getName());
+                    File align = new File(dirApkUnsing.getAbsolutePath().replaceAll(dirApkUnsing.getName() + "$", "") + "align_" + dirApkUnsing.getName());
                     ZipAlign.alignApk(dirApkUnsing, align);
                     dirApkUnsing.delete();
                     align.renameTo(dirApkUnsing);
