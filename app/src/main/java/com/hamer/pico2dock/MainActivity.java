@@ -665,6 +665,7 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         protected void onPostExecute(String result) {
+            Utils.CleanupTempDir();
 
             if (errorMessage != null && !errorMessage.isEmpty()) {
                 PercentText.setText("Error");
@@ -685,7 +686,6 @@ public class MainActivity extends AppCompatActivity {
         protected void onCancelled() {
             PercentText.setText("Terminated");
 
-            ChangeStateText("## Current Status\nCleaning directory...");
             Utils.CleanupTempDir();
 
             ChangeStateText("## Current Status\nProcess has been terminated.");
