@@ -317,7 +317,7 @@ public class MainActivity extends AppCompatActivity {
                             ZipUtil.pack(dirZipUnpack, apkFile);
                         }
 
-                        ChangeStateText("## Merger\nMerging multiple splitted **" + apkName + "**...");
+                        ChangeStateText("## Merger\nMerging multiple split **" + apkName + "**...");
 
                         // Start merge split APK
                         String newName = apkName.replaceAll("\\.x?apk[ms]?", ".apk");

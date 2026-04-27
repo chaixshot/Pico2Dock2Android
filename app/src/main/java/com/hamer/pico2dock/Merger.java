@@ -18,7 +18,7 @@ public class Merger extends com.reandroid.apkeditor.merge.Merger {
         super.logMessage(msg);
 
         if (!mainActivity.MainTask.isCancelled())
-            mainActivity.ChangeStateText("## Merger\nMerging multiple splitted **" + apkName + "**...\n\n``" + msg + "``");
+            mainActivity.ChangeStateText("## Merger\nMerging multiple split **" + apkName + "**...\n\n``" + msg + "``");
     }
 
     @Override
@@ -26,7 +26,7 @@ public class Merger extends com.reandroid.apkeditor.merge.Merger {
         super.logMessage(tag, msg);
 
         if (!mainActivity.MainTask.isCancelled())
-            mainActivity.ChangeStateText("## Merger\nMerging multiple splitted **" + apkName + "**...\n\n``" + msg + "``");
+            mainActivity.ChangeStateText("## Merger\nMerging multiple split **" + apkName + "**...\n\n``" + msg + "``");
     }
 
     @Override
@@ -34,7 +34,7 @@ public class Merger extends com.reandroid.apkeditor.merge.Merger {
         super.logVerbose(msg);
 
         if (!mainActivity.MainTask.isCancelled())
-            mainActivity.ChangeStateText("## Merger\nMerging multiple splitted **" + apkName + "**...\n\n``" + msg + "``");
+            mainActivity.ChangeStateText("## Merger\nMerging multiple split **" + apkName + "**...\n\n``" + msg + "``");
     }
 
     @Override
@@ -42,7 +42,7 @@ public class Merger extends com.reandroid.apkeditor.merge.Merger {
         super.logVerbose(tag, msg);
 
         if (!mainActivity.MainTask.isCancelled())
-            mainActivity.ChangeStateText("## Merger\nMerging multiple splitted **" + apkName + "**...\n\n``" + msg + "``");
+            mainActivity.ChangeStateText("## Merger\nMerging multiple split **" + apkName + "**...\n\n``" + msg + "``");
     }
 
     @Override
@@ -50,7 +50,7 @@ public class Merger extends com.reandroid.apkeditor.merge.Merger {
         super.logError(msg, tr);
 
         if (!mainActivity.MainTask.isCancelled())
-            mainActivity.ChangeStateText("## Merger\nMerging multiple splitted **" + apkName + "**...\n\n``" + msg + "``");
+            mainActivity.ChangeStateText("## Merger\nMerging multiple split **" + apkName + "**...\n\n``" + msg + "``");
     }
 
     @Override
