@@ -843,13 +843,14 @@ public class MainActivity extends AppCompatActivity {
                 builder.setMessage(apkTargetPath);
 
                 builder.setPositiveButton("YES", (dialog, which) -> {
-                    List<String> list = new ArrayList<String>(Arrays.asList(APKFiles));
-                    list.remove(info.position);
-                    APKFiles = list.toArray(new String[0]);
+                    if (!isConverted) {
+                        List<String> list = new ArrayList<String>(Arrays.asList(APKFiles));
+                        list.remove(info.position);
+                        APKFiles = list.toArray(new String[0]);
+                        FileviewHelper.FileviewApply(APKFiles);
+                    }
 
-                    FileviewHelper.FileviewApply(APKFiles);
                     ChangeButtonState();
-
                     apkTargetFile.delete();
 
                     dialog.dismiss();
