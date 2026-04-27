@@ -22,6 +22,7 @@ import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.Switch;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
@@ -93,7 +94,9 @@ public class MainActivity extends AppCompatActivity {
     boolean IsRePackageAdv = false;
     String NamePrefix;
     boolean IsRename = false;
+
     boolean IsProcessRunning = false;
+    Long DoubleBack = System.currentTimeMillis() - 2000;
     private static MainActivity instance;
 
     @Override
@@ -125,6 +128,31 @@ public class MainActivity extends AppCompatActivity {
 
         ResetAppearance();
         ChangeButtonState();
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (DoubleBack + 2000 > System.currentTimeMillis()) {
+            if (IsProcessRunning) {
+                ButtonCancel.performClick();
+                Toast.makeText(this, "Canceling process please wait...", Toast.LENGTH_SHORT).show();
+            } else {
+                super.onBackPressed();
+            }
+        } else {
+            DoubleBack = System.currentTimeMillis();
+
+            if (IsProcessRunning)
+                Toast.makeText(this, "Press once again to Cancel", Toast.LENGTH_SHORT).show();
+            else
+                Toast.makeText(this, "Press once again to Exit", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        System.exit(0);
     }
 
     public static MainActivity getInstance() {
@@ -633,11 +661,6 @@ public class MainActivity extends AppCompatActivity {
             }
 
             return null;
-        }
-
-        @Override
-        protected void onProgressUpdate(String... values) {
-//            setProgressPercent(progress[0]);
         }
 
         @Override

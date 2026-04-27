@@ -17,7 +17,7 @@ public class Merger extends com.reandroid.apkeditor.merge.Merger {
     public void logMessage(String msg) {
         super.logMessage(msg);
 
-        if (mainActivity.findViewById(R.id.ButtonCancel).isEnabled())
+        if (!mainActivity.MainTask.isCancelled())
             mainActivity.ChangeStateText("## Merger\nMerging multiple splitted **" + apkName + "**...\n\n``" + msg + "``");
     }
 
@@ -25,7 +25,7 @@ public class Merger extends com.reandroid.apkeditor.merge.Merger {
     public void logMessage(String tag, String msg) {
         super.logMessage(tag, msg);
 
-        if (mainActivity.findViewById(R.id.ButtonCancel).isEnabled())
+        if (!mainActivity.MainTask.isCancelled())
             mainActivity.ChangeStateText("## Merger\nMerging multiple splitted **" + apkName + "**...\n\n``" + msg + "``");
     }
 
@@ -33,7 +33,7 @@ public class Merger extends com.reandroid.apkeditor.merge.Merger {
     public void logVerbose(String msg) {
         super.logVerbose(msg);
 
-        if (mainActivity.findViewById(R.id.ButtonCancel).isEnabled())
+        if (!mainActivity.MainTask.isCancelled())
             mainActivity.ChangeStateText("## Merger\nMerging multiple splitted **" + apkName + "**...\n\n``" + msg + "``");
     }
 
@@ -41,7 +41,7 @@ public class Merger extends com.reandroid.apkeditor.merge.Merger {
     public void logVerbose(String tag, String msg) {
         super.logVerbose(tag, msg);
 
-        if (mainActivity.findViewById(R.id.ButtonCancel).isEnabled())
+        if (!mainActivity.MainTask.isCancelled())
             mainActivity.ChangeStateText("## Merger\nMerging multiple splitted **" + apkName + "**...\n\n``" + msg + "``");
     }
 
@@ -49,7 +49,7 @@ public class Merger extends com.reandroid.apkeditor.merge.Merger {
     public void logError(String msg, Throwable tr) {
         super.logError(msg, tr);
 
-        if (mainActivity.findViewById(R.id.ButtonCancel).isEnabled())
+        if (!mainActivity.MainTask.isCancelled())
             mainActivity.ChangeStateText("## Merger\nMerging multiple splitted **" + apkName + "**...\n\n``" + msg + "``");
     }
 
@@ -57,7 +57,7 @@ public class Merger extends com.reandroid.apkeditor.merge.Merger {
     public void logWarn(String msg) {
         super.logWarn(msg);
 
-        if (mainActivity.findViewById(R.id.ButtonCancel).isEnabled())
+        if (!mainActivity.MainTask.isCancelled())
             mainActivity.ChangeStateText("## Current Statu\nMerging **" + apkName + "**...\n\n``" + msg + "``");
     }
 }

@@ -20,7 +20,7 @@ public class Decompiler extends com.reandroid.apkeditor.decompile.Decompiler {
     public void logMessage(String msg) {
         super.logMessage(msg);
 
-        if (mainActivity.findViewById(R.id.ButtonCancel).isEnabled())
+        if (!mainActivity.MainTask.isCancelled())
             mainActivity.ChangeStateText("## Decoder\nDecompiling **" + apkName + "**...\n\n``" + msg + "``");
     }
 
@@ -28,7 +28,7 @@ public class Decompiler extends com.reandroid.apkeditor.decompile.Decompiler {
     public void logMessage(String tag, String msg) {
         super.logMessage(tag, msg);
 
-        if (mainActivity.findViewById(R.id.ButtonCancel).isEnabled())
+        if (!mainActivity.MainTask.isCancelled())
             mainActivity.ChangeStateText("## Decoder\nDecompiling **" + apkName + "**...\n\n``" + msg + "``");
     }
 
@@ -36,7 +36,7 @@ public class Decompiler extends com.reandroid.apkeditor.decompile.Decompiler {
     public void logVerbose(String msg) {
         super.logVerbose(msg);
 
-        if (mainActivity.findViewById(R.id.ButtonCancel).isEnabled())
+        if (!mainActivity.MainTask.isCancelled())
             mainActivity.ChangeStateText("## Decoder\nDecompiling **" + apkName + "**...\n\n``" + msg + "``");
     }
 
@@ -44,7 +44,7 @@ public class Decompiler extends com.reandroid.apkeditor.decompile.Decompiler {
     public void logVerbose(String tag, String msg) {
         super.logVerbose(tag, msg);
 
-        if (mainActivity.findViewById(R.id.ButtonCancel).isEnabled())
+        if (!mainActivity.MainTask.isCancelled())
             mainActivity.ChangeStateText("## Decoder\nDecompiling **" + apkName + "**...\n\n``" + msg + "``");
     }
 
@@ -52,7 +52,7 @@ public class Decompiler extends com.reandroid.apkeditor.decompile.Decompiler {
     public void logError(String msg, Throwable tr) {
         super.logError(msg, tr);
 
-        if (mainActivity.findViewById(R.id.ButtonCancel).isEnabled())
+        if (!mainActivity.MainTask.isCancelled())
             mainActivity.ChangeStateText("## Decoder\nDecompiling **" + apkName + "**...\n\n``" + msg + "``");
     }
 
@@ -60,7 +60,7 @@ public class Decompiler extends com.reandroid.apkeditor.decompile.Decompiler {
     public void logWarn(String msg) {
         super.logWarn(msg);
 
-        if (mainActivity.findViewById(R.id.ButtonCancel).isEnabled())
+        if (!mainActivity.MainTask.isCancelled())
             mainActivity.ChangeStateText("## Decoder\nDecompiling **" + apkName + "**...\n\n``" + msg + "``");
     }
 }
