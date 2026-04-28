@@ -472,8 +472,7 @@ public class MainActivity extends AppCompatActivity {
 
                     // Get package name and generate new package name
                     String packageName = xmlRoot.getAttribute("package");
-                    String ranPrefix = Utils.generateString(6);
-                    String newPackageName = packageName + ranPrefix;
+                    String newPackageName = packageName + "DOCK";
 
                     // Random package name
                     if (IsRePackage) {
@@ -495,7 +494,7 @@ public class MainActivity extends AppCompatActivity {
                             if (authorities.contains(packageName)) {
                                 provider.setAttributeNS(androidSpace, "android:authorities", authorities.replace(packageName, newPackageName));
                             } else {
-                                provider.setAttributeNS(androidSpace, "android:authorities", authorities + ranPrefix);
+                                provider.setAttributeNS(androidSpace, "android:authorities", authorities + "DOCK");
                             }
                         }
 
@@ -507,7 +506,7 @@ public class MainActivity extends AppCompatActivity {
                             if (IsRePackageAdv) {
                                 permission.setAttributeNS(androidSpace, "android:name", name.replace(packageName, newPackageName));
                             } else {
-                                permission.setAttributeNS(androidSpace, "android:name", name + ranPrefix);
+                                permission.setAttributeNS(androidSpace, "android:name", name + "DOCK");
                             }
                         }
 
@@ -518,7 +517,7 @@ public class MainActivity extends AppCompatActivity {
                             if (IsRePackageAdv) {
                                 usesPermission.setAttributeNS(androidSpace, "android:name", name.replace(packageName, newPackageName));
                             } else {
-                                usesPermission.setAttributeNS(androidSpace, "android:name", name + ranPrefix);
+                                usesPermission.setAttributeNS(androidSpace, "android:name", name + "DOCK");
                             }
                         }
 
