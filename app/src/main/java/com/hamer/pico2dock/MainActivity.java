@@ -11,6 +11,7 @@ import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.provider.ContactsContract;
 import android.provider.Settings;
 import android.view.ContextMenu;
 import android.view.MenuItem;
@@ -776,14 +777,12 @@ public class MainActivity extends AppCompatActivity {
         Context _this = this;
 
         String apkPath = APKFiles[info.position];
-        File apkFile = new File(apkPath.replaceAll("(" + Utils.FileIndicator.Working + "|" + Utils.FileIndicator.Success + ")\\s", ""));
-
         String apkOutPath = APKFilesOut[info.position];
+
+        File apkFile = new File(apkPath.replaceAll("(" + Utils.FileIndicator.Working + "|" + Utils.FileIndicator.Success + ")\\s", ""));
         File apkOutFile = new File(apkOutPath);
 
-        Boolean isConverted = apkPath.contains(Utils.FileIndicator.Success);
-
-        String apkTargetPath = isConverted ? apkOutPath : apkPath;
+        Boolean isConverted = apkPath.contains(Utils.FileIndicator.Success) && apkOutFile.exists();
         File apkTargetFile = isConverted ? apkOutFile : apkFile;
 
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -796,10 +795,11 @@ public class MainActivity extends AppCompatActivity {
                 dialog.dismiss();
             });
         } else {
+            //?? Install
             if (item.getTitle() == "Install") {
 
                 builder.setTitle("Do you want to install?");
-                builder.setMessage(apkTargetPath);
+                builder.setMessage(apkTargetFile.getPath());
 
                 builder.setPositiveButton("YES", (dialog, which) -> {
                     try {
@@ -821,9 +821,10 @@ public class MainActivity extends AppCompatActivity {
                 }).setNegativeButton("NO", (dialog, which) -> dialog.dismiss());
             }
 
+            //?? Remove
             if (item.getTitle() == "Remove") {
                 builder.setTitle("Do you want to remove?");
-                builder.setMessage(apkTargetPath);
+                builder.setMessage(apkTargetFile.getPath());
 
                 builder.setPositiveButton("YES", (dialog, which) -> {
                     List<String> list = new ArrayList<String>(Arrays.asList(APKFiles));
@@ -837,9 +838,10 @@ public class MainActivity extends AppCompatActivity {
                 }).setNegativeButton("NO", (dialog, which) -> dialog.dismiss());
             }
 
+            //?? Delete
             if (item.getTitle() == "Delete") {
                 builder.setTitle("Do you want to delete?");
-                builder.setMessage(apkTargetPath);
+                builder.setMessage(apkTargetFile.getPath());
 
                 builder.setPositiveButton("YES", (dialog, which) -> {
                     if (!isConverted) {
@@ -851,6 +853,13 @@ public class MainActivity extends AppCompatActivity {
 
                     ChangeButtonState();
                     apkTargetFile.delete();
+
+                    if(isConverted)
+                    {
+                        File dirPico = new File(apkTargetFile.getPath().replace(apkTargetFile.getName(), ""));
+                        if(dirPico.listFiles().length == 0)
+                            dirPico.delete();
+                    }
 
                     dialog.dismiss();
                 }).setNegativeButton("NO", (dialog, which) -> dialog.dismiss());
