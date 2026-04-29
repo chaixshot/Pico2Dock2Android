@@ -85,4 +85,11 @@ public class Utils {
             });
         }
     }
+
+    public static class FileIndicator {
+        public static  String Working = "🛠️";
+        public static String Success = "✅";
+        public static String Error = "❌";
+        public static String ErrorInfo = "⭕";
+    }
 }

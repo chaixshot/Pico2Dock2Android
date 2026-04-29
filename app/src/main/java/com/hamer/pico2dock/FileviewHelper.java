@@ -44,7 +44,7 @@ public class FileviewHelper {
             public void run() {
                 Integer index = 0;
                 for (String path : mainActivity.APKFiles) {
-                    String newPath = path.replace("🛠️ ", "").replace("✅ ", "");
+                    String newPath = path.replaceAll("(" + Utils.FileIndicator.Working + "|" + Utils.FileIndicator.Success + ")\\s", "");
 
                     mainActivity.APKFiles[index] = newPath;
 
