@@ -22,12 +22,17 @@ It can be **.apk**, **.xapk**, **.apkm**, and **.apks**.
 3. Copy APK files to the headset and install or install via ``adb install`` command
 4. Click the file selection box to choose files
 6. Press the **Start** button and wait for the finish
-7. Docked APK files are in **Pico** folder by the same folder as the original file, or long click the file in the box above to see the options
+7. Docked APK files are in **Pico** folder by the same folder as the original file, or long-click the file in the box above to see the options
 
 ## ⁉️ Can an app change state on the fly?
 No, but you can install **Docked** alongside **Floating** by checking the **Random package name** box option, and you can also add text after the app name for classification.
 
 <image src="Resource/Screenshot_both.jpeg" width="400">
+
+## 🔃 Checking for app update?
+Check out [ObtainX](https://github.com/bikram-agarwal/ObtainX) on GitHub.
+
+<image src="Resource/Screenshot_dev.bikram.obtainx_2026.04.30-18.15.18.692_612.jpeg" width="400">
 
 ## 🙏 Special thanks to:
 - [APKEditor](https://github.com/REAndroid/APKEditor) - Used for decompiling and recompiling Android Package
