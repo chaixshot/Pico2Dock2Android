@@ -463,7 +463,7 @@ public class MainActivity extends AppCompatActivity {
                             activities.item(i).appendChild(layout.cloneNode(true));
 
                             Element provider = (Element) activities.item(i);
-                            provider.setAttributeNS(androidSpace, "android:taskAffinity", ".vrmode");
+                            // provider.setAttributeNS(androidSpace, "android:taskAffinity", ".vrmode"); //Using same recent app icon row
                             provider.setAttributeNS(androidSpace, "android:resizeableActivity", "true");
                             if (isMainActivity)
                                 provider.setAttributeNS(androidSpace, "android:screenOrientation", isPortrait ? "portrait" : "landscape");
