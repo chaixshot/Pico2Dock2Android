@@ -514,11 +514,6 @@ public class MainActivity extends AppCompatActivity {
                         application.appendChild(metaData);
 
                         metaData = xmlDoc.createElement("meta-data");
-                        metaData.setAttributeNS(android, "android:name", "feature.support_custom_panel");
-                        metaData.setAttributeNS(android, "android:value", "1");
-                        application.appendChild(metaData);
-
-                        metaData = xmlDoc.createElement("meta-data");
                         metaData.setAttributeNS(android, "android:name", "pvr.2dtovr.mode");
                         metaData.setAttributeNS(android, "android:value", "6");
                         application.appendChild(metaData);
@@ -536,6 +531,11 @@ public class MainActivity extends AppCompatActivity {
                         metaData = xmlDoc.createElement("meta-data");
                         metaData.setAttributeNS(android, "android:name", "feature_version");
                         metaData.setAttributeNS(android, "android:value", "2");
+                        application.appendChild(metaData);
+
+                        metaData = xmlDoc.createElement("meta-data");
+                        metaData.setAttributeNS(android, "android:name", "feature.support_custom_panel");
+                        metaData.setAttributeNS(android, "android:value", "1");
                         application.appendChild(metaData);
 
                         metaData = xmlDoc.createElement("meta-data");

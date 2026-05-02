@@ -28,6 +28,7 @@ public class FileviewHelper {
             @Override
             public void run() {
                 fileView.setItemChecked(index, true);
+                fileView.smoothScrollToPosition(index + 1);
             }
         });
     }
