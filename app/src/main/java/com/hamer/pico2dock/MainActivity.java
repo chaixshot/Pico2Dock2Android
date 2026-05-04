@@ -55,7 +55,9 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
@@ -440,123 +442,85 @@ public class MainActivity extends AppCompatActivity {
                         layout.setAttributeNS(android, "android:defaultHeight", isPortrait ? "480.0dp" : "600.0dp");
 
                         // Add metaData to all activities elements under application
-                        for (int row = 1; row <= 2; row++) {
-                            NodeList activity = application.getElementsByTagName(row == 1 ? "activity" : "activity-alias");
+                        for (String tagName : new String[]{"activity", "activity-alias"}) {
+                            NodeList activities = application.getElementsByTagName(tagName);
 
-                            for (int itemIndex = 0; itemIndex < activity.getLength(); itemIndex++) {
+                            for (int itemIndex = 0; itemIndex < activities.getLength(); itemIndex++) {
                                 Boolean isMainActivity = false;
+                                Element activity = (Element) activities.item(itemIndex);
 
-                                Element item = (Element) activity.item(itemIndex);
-                                NodeList intentFilters = item.getElementsByTagName("intent-filter");
-                                for (int j = 0; j < intentFilters.getLength(); j++) {
-                                    Element intentFilter = (Element) intentFilters.item(j);
-                                    NodeList actions = intentFilter.getElementsByTagName("action");
-                                    for (int k = 0; k < actions.getLength(); k++) {
-                                        Element action = (Element) actions.item(k);
-                                        String nameAttr = action.getAttributeNS(android, "name");
-                                        if ("android.intent.action.MAIN".equals(nameAttr)) {
-                                            isMainActivity = true;
-                                            break;
-                                        }
+                                NodeList actions = activity.getElementsByTagName("action");
+                                for (int i = 0; i < actions.getLength(); i++) {
+                                    if ("android.intent.action.MAIN".equals(((Element) actions.item(i)).getAttributeNS(android, "name"))) {
+                                        isMainActivity = true;
+                                        break;
                                     }
-                                    if (isMainActivity) break;
                                 }
 
                                 Element vrMode = xmlDoc.createElement("meta-data");
                                 vrMode.setAttributeNS(android, "android:name", "pvr.2dtovr.mode");
                                 vrMode.setAttributeNS(android, "android:value", isMainActivity ? "6" : "2");
 
-                                item.appendChild(vrPosition.cloneNode(true));
-                                item.appendChild(vrPositionOverlay.cloneNode(true));
-                                item.appendChild(vrMode.cloneNode(true));
-                                item.appendChild(layout.cloneNode(true));
+                                activity.appendChild(vrPosition.cloneNode(true));
+                                activity.appendChild(vrPositionOverlay.cloneNode(true));
+                                activity.appendChild(vrMode.cloneNode(true));
+                                activity.appendChild(layout.cloneNode(true));
 
-                                item.setAttributeNS(android, "android:resizeableActivity", "true");
+                                activity.setAttributeNS(android, "android:resizeableActivity", "true");
                                 if (isMainActivity)
-                                    item.setAttributeNS(android, "android:screenOrientation", isPortrait ? "portrait" : "landscape");
+                                    activity.setAttributeNS(android, "android:screenOrientation", isPortrait ? "portrait" : "landscape");
                             }
                         }
                     }
 
                     //** Adding element [root]
                     if (true) {
-                        Element metaData = xmlDoc.createElement("meta-data");
-                        metaData.setAttributeNS(android, "android:name", "pvr.2dtovr.mode");
-                        metaData.setAttributeNS(android, "android:value", "6");
-                        xmlRoot.appendChild(metaData);
+                        Map<String, String> metaDataMap = new LinkedHashMap<>(); // LinkedHashMap preserves order
+                        metaDataMap.put("pvr.2dtovr.mode", "6");
+                        metaDataMap.put("pvr.display.orientation", "180");
 
-                        metaData = xmlDoc.createElement("meta-data");
-                        metaData.setAttributeNS(android, "android:name", "pvr.display.orientation");
-                        metaData.setAttributeNS(android, "android:value", "180");
-                        xmlRoot.appendChild(metaData);
+                        for (Map.Entry<String, String> entry : metaDataMap.entrySet()) {
+                            Element metaData = xmlDoc.createElement("meta-data");
+                            metaData.setAttributeNS(android, "android:name", entry.getKey());
+                            metaData.setAttributeNS(android, "android:value", entry.getValue());
+                            xmlRoot.appendChild(metaData);
+                        }
                     }
 
                     //** Adding element [root > application]
                     if (true) {
-                        Element metaData = xmlDoc.createElement("meta-data");
-                        metaData.setAttributeNS(android, "android:name", "isPUI");
-                        metaData.setAttributeNS(android, "android:value", "1");
-                        application.appendChild(metaData);
+                        Map<String, String> metaDataMap = new LinkedHashMap<>(); // LinkedHashMap preserves order
+                        metaDataMap.put("isPUI", "1");
+                        metaDataMap.put("pvr.vrshell.mode", "1");
+                        metaDataMap.put("com.pvr.hmd.trackingmode", "6dof");
+                        metaDataMap.put("pico_permission_dim_show", "false");
+                        metaDataMap.put("pvr.2dtovr.mode", "6");
+                        metaDataMap.put("pvr.display.orientation", "180");
+                        metaDataMap.put("feature", "2");
+                        metaDataMap.put("feature_version", "2");
+                        metaDataMap.put("feature.support_custom_panel", "1");
+                        metaDataMap.put("channel_id", "PUI");
 
-                        metaData = xmlDoc.createElement("meta-data");
-                        metaData.setAttributeNS(android, "android:name", "pvr.vrshell.mode");
-                        metaData.setAttributeNS(android, "android:value", "1");
-                        application.appendChild(metaData);
-
-                        metaData = xmlDoc.createElement("meta-data");
-                        metaData.setAttributeNS(android, "android:name", "com.pvr.hmd.trackingmode");
-                        metaData.setAttributeNS(android, "android:value", "6dof");
-                        application.appendChild(metaData);
-
-                        metaData = xmlDoc.createElement("meta-data");
-                        metaData.setAttributeNS(android, "android:name", "pico_permission_dim_show");
-                        metaData.setAttributeNS(android, "android:value", "false");
-                        application.appendChild(metaData);
-
-                        metaData = xmlDoc.createElement("meta-data");
-                        metaData.setAttributeNS(android, "android:name", "pvr.2dtovr.mode");
-                        metaData.setAttributeNS(android, "android:value", "6");
-                        application.appendChild(metaData);
-
-                        metaData = xmlDoc.createElement("meta-data");
-                        metaData.setAttributeNS(android, "android:name", "pvr.display.orientation");
-                        metaData.setAttributeNS(android, "android:value", "180");
-                        application.appendChild(metaData);
-
-                        metaData = xmlDoc.createElement("meta-data");
-                        metaData.setAttributeNS(android, "android:name", "feature");
-                        metaData.setAttributeNS(android, "android:value", "2");
-                        application.appendChild(metaData);
-
-                        metaData = xmlDoc.createElement("meta-data");
-                        metaData.setAttributeNS(android, "android:name", "feature_version");
-                        metaData.setAttributeNS(android, "android:value", "2");
-                        application.appendChild(metaData);
-
-                        metaData = xmlDoc.createElement("meta-data");
-                        metaData.setAttributeNS(android, "android:name", "feature.support_custom_panel");
-                        metaData.setAttributeNS(android, "android:value", "1");
-                        application.appendChild(metaData);
-
-                        metaData = xmlDoc.createElement("meta-data");
-                        metaData.setAttributeNS(android, "android:name", "channel_id");
-                        metaData.setAttributeNS(android, "android:value", "PUI");
-                        application.appendChild(metaData);
+                        for (Map.Entry<String, String> entry : metaDataMap.entrySet()) {
+                            Element metaData = xmlDoc.createElement("meta-data");
+                            metaData.setAttributeNS(android, "android:name", entry.getKey());
+                            metaData.setAttributeNS(android, "android:value", entry.getValue());
+                            application.appendChild(metaData);
+                        }
                     }
-
-                    //** Get package name and generate new package name
-                    String packageName = xmlRoot.getAttribute("package");
-                    String newPackageName = packageName + "DOCK";
 
                     //** Random package name
                     if (IsRePackage) {
+                        String packageName = xmlRoot.getAttribute("package");
+                        String newPackageName = packageName + "DOCK";
+
+                        // Change package name
                         xmlRoot.setAttribute("package", newPackageName);
 
                         if (IsRePackageAdv) {
-                            String sharedUserId = xmlRoot.getAttributeNS(android, "sharedUserId");
-                            if (sharedUserId != null && !sharedUserId.isEmpty()) {
-                                String newSharedUserId = sharedUserId.replace(packageName, newPackageName);
-                                xmlRoot.setAttributeNS(android, "android:sharedUserId", newSharedUserId);
+                            String sharedId = xmlRoot.getAttributeNS(android, "sharedUserId");
+                            if (sharedId != null && !sharedId.isEmpty()) {
+                                xmlRoot.setAttributeNS(android, "android:sharedUserId", sharedId.replace(packageName, newPackageName));
                             }
                         }
 
@@ -564,12 +528,9 @@ public class MainActivity extends AppCompatActivity {
                         NodeList providers = application.getElementsByTagName("provider");
                         for (int i = 0; i < providers.getLength(); i++) {
                             Element provider = (Element) providers.item(i);
-                            String authorities = provider.getAttributeNS(android, "authorities");
-                            if (authorities.contains(packageName)) {
-                                provider.setAttributeNS(android, "android:authorities", authorities.replace(packageName, newPackageName));
-                            } else {
-                                provider.setAttributeNS(android, "android:authorities", authorities + "DOCK");
-                            }
+                            String auth = provider.getAttributeNS(android, "authorities");
+                            String newAuth = auth.contains(packageName) ? auth.replace(packageName, newPackageName) : auth + "DOCK";
+                            provider.setAttributeNS(android, "android:authorities", newAuth);
                         }
 
                         // Change permissions
@@ -609,48 +570,41 @@ public class MainActivity extends AppCompatActivity {
                     if (!NamePrefix.isEmpty()) {
                         String app_name = application.getAttributeNS(android, "label");
 
-                        if (IsRename || !Pattern.matches("@string\\/.*", app_name)) {
+                        if (IsRename) { // Replace name
                             application.setAttributeNS(android, "android:label", NamePrefix);
-                        } else {
-                            Integer packageIndex = 1;
+                        } else if (!Pattern.matches("@string/.+", app_name)) {
+                            application.setAttributeNS(android, "android:label", app_name + NamePrefix);
+                        } else { // Append name in resources
                             String stringID = app_name.replace("@string/", "");
-                            Boolean isTwoDigit = Files.exists(Paths.get(dirWorker + "/resources/package_0" + packageIndex + "/res"));
 
-                            // Iterate over res/values* directories and update strings.xml
-                            while (true) {
-                                Path resPath = Paths.get(dirWorker + "/resources/package_" + (isTwoDigit ? String.format("%02d", packageIndex) : packageIndex) + "/res");
-                                if (!Files.exists(resPath)) break;
+                            // Search all directories for "strings.xml"
+                            try (Stream<Path> paths = Files.walk(Paths.get(dirWorker.getPath(), "resources"))) {
+                                paths.filter(p -> p.getFileName().toString().equals("strings.xml")).forEach(path -> {
+                                    try {
+                                        File stringXml = path.toFile();
+                                        Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(stringXml);
+                                        NodeList tags = doc.getElementsByTagName("string");
+                                        boolean modified = false;
 
-                                try (Stream<Path> dirs = Files.list(resPath)) {
-                                    dirs.filter(Files::isDirectory)
-                                            .filter(dir -> dir.getFileName().toString().contains("values"))
-                                            .forEach(dir -> {
-                                                Path stringsFile = dir.resolve("strings.xml");
-                                                if (Files.exists(stringsFile)) {
-                                                    try {
-                                                        Document stringDoc = builder.parse(stringsFile.toFile());
-                                                        Element stringRoot = stringDoc.getDocumentElement();
-                                                        NodeList strings = stringRoot.getElementsByTagName("string");
-                                                        for (int i = 0; i < strings.getLength(); i++) {
-                                                            Element srt = (Element) strings.item(i);
-                                                            String nameAttr = srt.getAttribute("name");
-                                                            if (nameAttr.contains(stringID)) {
-                                                                String currentValue = srt.getTextContent();
-                                                                srt.setTextContent(currentValue + NamePrefix);
-                                                            }
-                                                        }
-                                                        // Save updated strings.xml
-                                                        Transformer transString = TransformerFactory.newInstance().newTransformer();
-                                                        transString.setOutputProperty(OutputKeys.INDENT, "yes");
-                                                        transString.transform(new DOMSource(stringDoc), new StreamResult(stringsFile.toFile()));
-                                                    } catch (Exception e) {
-                                                        e.printStackTrace();
-                                                    }
-                                                }
-                                            });
-                                }
+                                        // Find the specific element by attribute
+                                        for (int i = 0; i < tags.getLength(); i++) {
+                                            Element el = (Element) tags.item(i);
+                                            if (el.getAttribute("name").equals(stringID)) {
+                                                el.setTextContent(el.getTextContent() + NamePrefix);
+                                                modified = true;
+                                                break; // Stop looking in this file once found
+                                            }
+                                        }
 
-                                packageIndex++;
+                                        // Save if changed
+                                        if (modified) {
+                                            Transformer tf = TransformerFactory.newInstance().newTransformer();
+                                            tf.transform(new DOMSource(doc), new StreamResult(stringXml));
+                                        }
+                                    } catch (Exception ignored) {
+                                    }
+                                });
+                            } catch (Exception ignored) {
                             }
                         }
                     }
